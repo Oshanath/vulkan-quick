@@ -12,7 +12,7 @@ add_executable(Triangle main.cpp)
 # Shader compilation
 file(GLOB SHADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.*")
 
-set(SHADER_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Triangle/shaders/target")
+set(SHADER_OUTPUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders/target")
 set(BUILD_SHADER_OUTPUT_DIR "${CMAKE_BINARY_DIR}/Triangle/shaders")
 
 # Ensure output directories exist
