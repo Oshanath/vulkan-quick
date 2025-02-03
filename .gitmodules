@@ -1,0 +1,9 @@
+[submodule "vk-bootstrap"]
+	path = vk-bootstrap
+	url = https://github.com/charles-lunarg/vk-bootstrap
+[submodule "glfw"]
+	path = glfw
+	url = https://github.com/glfw/glfw.git
+[submodule "glm"]
+	path = glm
+	url = https://github.com/g-truc/glm.git
