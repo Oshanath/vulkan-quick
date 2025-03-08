@@ -4,18 +4,19 @@
 #include <fstream>
 #include <string>
 
-Shader::Shader(ShaderType type, std::string filePath)
+Shader::Shader(std::string filePath, vk::Device& device)
 {
-    // Read file into a string
-    auto absolutePath = std::filesystem::absolute(filePath);
-    std::ifstream file(absolutePath);
+    std::ifstream file(filePath, std::ios::ate | std::ios::binary);
     if (!file.is_open()) {
         throw std::runtime_error("failed to open file!");
     }
-
-    std::string source((std::istreambuf_iterator<char>(file)),
-        std::istreambuf_iterator<char>());
+    size_t fileSize = file.tellg();
+    std::vector<char> buffer(fileSize);
+    file.seekg(0);
+    file.read(buffer.data(), fileSize);
     file.close();
 
+    vk::ShaderModuleCreateInfo shader_module_create_info({}, buffer.size(), reinterpret_cast<const uint32_t*>(buffer.data()));
+    this->shaderModule = device.createShaderModule(shader_module_create_info);
 
 }

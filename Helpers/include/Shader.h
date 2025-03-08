@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vulkan/vulkan.hpp>
 
 enum class ShaderType
 {
@@ -12,5 +13,10 @@ enum class ShaderType
 class Shader
 {
 public:
-	Shader(ShaderType type, std::string filePath);
+	explicit Shader(std::string filePath, vk::Device& device);
+
+	vk::ShaderModule getShaderModule() { return shaderModule; }
+
+private:
+	vk::ShaderModule shaderModule;
 };

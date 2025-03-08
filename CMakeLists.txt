@@ -18,7 +18,3 @@ add_subdirectory(glm)
 
 add_subdirectory(Triangle)
 add_subdirectory(Helpers)
-
-add_executable (VulkanTemplate "Triangle/Triangle.cpp" "Triangle/main.cpp" "Helpers/include/Shader.h" "Helpers/src/Shader.cpp")
-
-target_link_libraries(VulkanTemplate Vulkan::Vulkan vk-bootstrap::vk-bootstrap glfw glm Helpers)
