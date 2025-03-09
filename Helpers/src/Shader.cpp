@@ -4,7 +4,7 @@
 #include <fstream>
 #include <string>
 
-Shader::Shader(std::string filePath, vk::Device& device)
+Shader::Shader(std::string filePath, const vk::Device& device)
 {
     std::ifstream file(filePath, std::ios::ate | std::ios::binary);
     if (!file.is_open()) {

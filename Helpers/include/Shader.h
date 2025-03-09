@@ -13,7 +13,7 @@ enum class ShaderType
 class Shader
 {
 public:
-	explicit Shader(std::string filePath, vk::Device& device);
+	explicit Shader(std::string filePath, const vk::Device& device);
 
 	vk::ShaderModule getShaderModule() { return shaderModule; }
 

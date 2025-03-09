@@ -13,7 +13,7 @@
 
 class GraphicsPipeline {
 public:
-    vk::Device& device;
+    const vk::Device& device;
     vk::GraphicsPipelineCreateInfo pipelineCreateInfo;
     std::vector <vk::PipelineShaderStageCreateInfo> shaderStages;
     std::vector<vk::DynamicState> dynamicStates;
@@ -31,7 +31,7 @@ public:
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo;
     vk::Pipeline graphicsPipeline;
 
-    explicit GraphicsPipeline(vk::Device& device, RenderPass renderPass, uint32_t width, uint32_t height);
+    explicit GraphicsPipeline(const vk::Device& device, RenderPass renderPass, uint32_t width, uint32_t height);
 
     void createLayoutAndPipeline();
     void setVertexShader(Shader& shader);

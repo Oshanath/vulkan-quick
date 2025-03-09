@@ -6,7 +6,8 @@
 
 #include "RenderPass.h"
 
-GraphicsPipeline::GraphicsPipeline(vk::Device& device, RenderPass renderPass, uint32_t width, uint32_t height): device(device),
+GraphicsPipeline::GraphicsPipeline(const vk::Device& device, RenderPass renderPass, uint32_t width, uint32_t height):
+    device(device),
     dynamicStates({vk::DynamicState::eViewport, vk::DynamicState::eScissor}),
     dynamicStateCreateInfo({}, dynamicStates),
     vertexInputStateCreateInfo({}, 0, nullptr, 0, nullptr),
