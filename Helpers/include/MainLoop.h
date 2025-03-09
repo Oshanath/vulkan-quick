@@ -20,6 +20,8 @@
 
 #include <iostream>
 
+#include <vma/vk_mem_alloc.h>
+
 #include "Shader.h"
 #include "VkBootstrap.h"
 
@@ -30,13 +32,11 @@ public:
     MainLoop(int width, int height, std::string title);
     void run();
 
-protected:
     GLFWwindow* window;
-
-private:
     int width;
     int height;
     uint32_t extensionCount;
+
     vkb::Instance vkbInstance;
     VkSurfaceKHR surface;
     vkb::PhysicalDevice vkbPhysicalDevice;
@@ -44,84 +44,6 @@ private:
     vkb::Swapchain vkbSwapchain;
 
     vk::Device device;
-
-protected:
-    virtual void render(vk::CommandBuffer& commandBuffer) = 0;
-
-public:
-    constexpr  int getMaxFramesInFlight() const {
-        return MAX_FRAMES_IN_FLIGHT;
-    }
-
-    int getWidth() const {
-        return width;
-    }
-
-    int getHeight() const {
-        return height;
-    }
-
-    const GLFWwindow * getWindow() const {
-        return window;
-    }
-
-    uint32_t getExtensionCount() const {
-        return extensionCount;
-    }
-
-    const VkSurfaceKHR& getSurface() const {
-        return surface;
-    }
-
-    const vk::Device& getDevice() const {
-        return device;
-    }
-
-    const vk::Queue& getGraphicsQueue() const {
-        return graphicsQueue;
-    }
-
-    const vk::SwapchainKHR& getSwapchain() const {
-        return swapchain;
-    }
-
-    const RenderPass& getRenderPass() const {
-        return renderPass;
-    }
-
-    const std::vector<vk::Framebuffer>& getSwapchainFramebuffers() const {
-        return swapchainFramebuffers;
-    }
-
-    const vk::CommandPool& getCommandPool() const {
-        return commandPool;
-    }
-
-    const std::vector<vk::CommandBuffer>& getCommandBuffers() const {
-        return commandBuffers;
-    }
-
-    const std::vector<vk::Semaphore>& getImageAvailableSemaphores() const {
-        return imageAvailableSemaphores;
-    }
-
-    const std::vector<vk::Semaphore>& getRenderFinishedSemaphores() const {
-        return renderFinishedSemaphores;
-    }
-
-    const std::vector<vk::Fence>& getInFlightFences() const {
-        return inFlightFences;
-    }
-
-    uint32_t getImageIndex() const {
-        return imageIndex;
-    }
-
-    uint32_t getCurrentFrame() const {
-        return currentFrame;
-    }
-
-private:
     vk::Queue graphicsQueue;
     vk::SwapchainKHR swapchain;
     RenderPass renderPass;
@@ -131,6 +53,7 @@ private:
     std::vector<vk::Semaphore> imageAvailableSemaphores;
     std::vector<vk::Semaphore> renderFinishedSemaphores;
     std::vector<vk::Fence> inFlightFences;
+    VmaAllocator vmaAllocator;
 
     uint32_t imageIndex;
     uint32_t currentFrame;
@@ -147,6 +70,10 @@ private:
     vk::CommandPool createCommandPool();
     std::vector<vk::CommandBuffer> allocateCommandBuffers();
     void createSyncObjects();
+    VmaAllocator createVmaAllocator();
+
+    virtual void render(vk::CommandBuffer& commandBuffer) = 0;
+
 };
 
 

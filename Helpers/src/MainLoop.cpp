@@ -6,6 +6,9 @@
 
 #include "MainLoop.h"
 
+#define VMA_IMPLEMENTATION
+#include <vma/vk_mem_alloc.h>
+
 MainLoop::MainLoop(int width, int height, std::string title):
     width(width),
     height(height),
@@ -24,7 +27,8 @@ MainLoop::MainLoop(int width, int height, std::string title):
     commandPool(createCommandPool()),
     commandBuffers(allocateCommandBuffers()),
     imageIndex(0),
-    currentFrame(0)
+    currentFrame(0),
+    vmaAllocator(createVmaAllocator())
 {
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 
@@ -43,7 +47,7 @@ void MainLoop::run() {
 
         commandBuffers[currentFrame].reset();
         commandBuffers[currentFrame].begin(vk::CommandBufferBeginInfo({}));
-        renderPass.beginRenderPass(swapchainFramebuffers[imageIndex], vk::Extent2D(getWidth(), getHeight()), commandBuffers[currentFrame]);
+        renderPass.beginRenderPass(swapchainFramebuffers[imageIndex], vk::Extent2D(width, height), commandBuffers[currentFrame]);
 
         render(commandBuffers[currentFrame]);
 
@@ -171,4 +175,19 @@ void MainLoop::createSyncObjects() {
         renderFinishedSemaphores.push_back(device.createSemaphore({}));
         inFlightFences.push_back(device.createFence({vk::FenceCreateFlagBits::eSignaled}));
     }
+}
+
+VmaAllocator MainLoop::createVmaAllocator() {
+
+    VmaAllocator allocator;
+    VmaAllocatorCreateInfo allocatorInfo = {};
+    allocatorInfo.physicalDevice = vkbPhysicalDevice.physical_device;
+    allocatorInfo.device = device;
+    allocatorInfo.instance = vkbInstance.instance;
+    allocatorInfo.vulkanApiVersion = VK_API_VERSION_1_0;
+    auto result = vmaCreateAllocator(&allocatorInfo, &allocator);
+    if (result != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create VMA allocator.");
+    }
+    return allocator;
 }

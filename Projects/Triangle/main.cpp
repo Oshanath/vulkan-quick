@@ -23,11 +23,11 @@ public:
 
     Triangle(int width, int height, std::string title):
         MainLoop(width, height, title),
-        graphicsPipeline(getDevice(), getRenderPass(), getWidth(), getHeight())
+        graphicsPipeline(device, renderPass, width, height)
     {
 
-        Shader vertexShader("./shaders/triangle.vert.spv", getDevice());
-        Shader fragmentShader("./shaders/triangle.frag.spv", getDevice());
+        Shader vertexShader("./shaders/triangle.vert.spv", device);
+        Shader fragmentShader("./shaders/triangle.frag.spv", device);
 
         graphicsPipeline.setVertexShader(vertexShader);
         graphicsPipeline.setFragmentShader(fragmentShader);
@@ -36,8 +36,8 @@ public:
 
     void render(vk::CommandBuffer& commandBuffer) override {
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline.graphicsPipeline);
-        commandBuffer.setViewport(0, {vk::Viewport(0.0f, 0.0f, static_cast<float>(getWidth()), static_cast<float>(getHeight()), 0.0f, 1.0f)});
-        commandBuffer.setScissor(0, {vk::Rect2D({0, 0}, {static_cast<uint32_t>(getWidth()), static_cast<uint32_t>(getHeight())})});
+        commandBuffer.setViewport(0, {vk::Viewport(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height), 0.0f, 1.0f)});
+        commandBuffer.setScissor(0, {vk::Rect2D({0, 0}, {static_cast<uint32_t>(width), static_cast<uint32_t>(height)})});
         commandBuffer.draw(3, 1, 0, 0);
     }
 };

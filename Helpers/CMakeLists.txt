@@ -4,8 +4,8 @@ add_library(Helpers
     src/Shader.cpp
     src/GraphicsPipeline.cpp
     src/RenderPass.cpp
-        src/MainLoop.cpp
-        include/MainLoop.h
+    src/MainLoop.cpp
+    src/Buffer.cpp
 )
 
 target_link_libraries(Helpers

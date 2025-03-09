@@ -1,19 +1,19 @@
 cmake_minimum_required(VERSION 3.10)
 
 # Set the project name (change as needed)
-project(Triangle)
+project(TriangleWithVertexBuffers)
 
 # Find Vulkan
 find_package(Vulkan REQUIRED)
 
 # Add executable
-add_executable(Triangle main.cpp)
+add_executable(TriangleWithVertexBuffers main.cpp)
 
 # Shader compilation
 file(GLOB SHADER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.*")
 
 set(SHADER_OUTPUT_DIR "shaders")
-set(BUILD_SHADER_OUTPUT_DIR "${CMAKE_BINARY_DIR}/Triangle/shaders")
+set(BUILD_SHADER_OUTPUT_DIR "${CMAKE_BINARY_DIR}/TriangleWithVertexBuffers/shaders")
 
 # Ensure output directories exist
 file(MAKE_DIRECTORY ${SHADER_OUTPUT_DIR})
@@ -35,8 +35,8 @@ foreach(SHADER ${SHADER_FILES})
     list(APPEND SPIRV_BINARY_FILES ${SPIRV_FILE_TARGET} ${SPIRV_FILE_BUILD})
 endforeach()
 
-add_custom_target(TriangleCompileShaders DEPENDS ${SPIRV_BINARY_FILES})
-add_dependencies(Triangle TriangleCompileShaders)
+add_custom_target(TriangleWithVertexBuffersCompileShaders DEPENDS ${SPIRV_BINARY_FILES})
+add_dependencies(TriangleWithVertexBuffers TriangleWithVertexBuffersCompileShaders)
 
 # Link Vulkan
-target_link_libraries(Triangle Vulkan::Vulkan vk-bootstrap::vk-bootstrap glfw glm Helpers)
+target_link_libraries(TriangleWithVertexBuffers Vulkan::Vulkan vk-bootstrap::vk-bootstrap GPUOpen::VulkanMemoryAllocator glfw glm Helpers)
