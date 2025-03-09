@@ -74,6 +74,7 @@ public:
 
     virtual void render(vk::CommandBuffer& commandBuffer) = 0;
 
+    vk::CommandBuffer beginSingleTimeCommands();
 };
 
 

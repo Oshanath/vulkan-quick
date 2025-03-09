@@ -49,7 +49,7 @@ public:
     Triangle(int width, int height, std::string title):
         MainLoop(width, height, title),
         graphicsPipeline(device, renderPass, width, height),
-        vertexBuffer(vmaAllocator, sizeof(vertices[0]) * vertices.size(), vk::BufferUsageFlagBits::eVertexBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU)
+        vertexBuffer(createBufferWithData(*this, sizeof(vertices[0]) * vertices.size(), vk::BufferUsageFlagBits::eVertexBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU, (void*)vertices.data()))
     {
 
         Shader vertexShader("./shaders/triangle.vert.spv", device);
@@ -65,8 +65,6 @@ public:
         graphicsPipeline.vertexInputStateCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
         graphicsPipeline.vertexInputStateCreateInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
         graphicsPipeline.createLayoutAndPipeline();
-
-        vertexBuffer.copyData(vmaAllocator, (void*)vertices.data(), sizeof(vertices[0]) * vertices.size());
     }
 
     void render(vk::CommandBuffer& commandBuffer) override {

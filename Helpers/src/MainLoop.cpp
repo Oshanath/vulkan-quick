@@ -191,3 +191,13 @@ VmaAllocator MainLoop::createVmaAllocator() {
     }
     return allocator;
 }
+
+vk::CommandBuffer MainLoop::beginSingleTimeCommands() {
+    vk::CommandBufferAllocateInfo allocInfo(commandPool, vk::CommandBufferLevel::ePrimary, 1);
+    vk::CommandBuffer commandBuffer = device.allocateCommandBuffers(allocInfo)[0];
+
+    vk::CommandBufferBeginInfo beginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+    commandBuffer.begin(beginInfo);
+
+    return commandBuffer;
+}
