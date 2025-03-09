@@ -40,16 +40,23 @@ class Triangle : public MainLoop{
 public:
     GraphicsPipeline graphicsPipeline;
     const std::vector<Vertex> vertices = {
-        {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-        {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-        {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+        {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+        {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+        {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+        {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
     };
+    const std::vector<uint16_t> indices = {
+        0, 1, 2, 2, 3, 0
+    };
+
     Buffer vertexBuffer;
+    Buffer indexBuffer;
 
     Triangle(int width, int height, std::string title):
         MainLoop(width, height, title),
         graphicsPipeline(device, renderPass, width, height),
-        vertexBuffer(createBufferWithData(*this, sizeof(vertices[0]) * vertices.size(), vk::BufferUsageFlagBits::eVertexBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU, (void*)vertices.data()))
+        vertexBuffer(createBufferWithData(*this, sizeof(vertices[0]) * vertices.size(), vk::BufferUsageFlagBits::eVertexBuffer, VMA_MEMORY_USAGE_GPU_ONLY, (void*)vertices.data())),
+        indexBuffer(createBufferWithData(*this, sizeof(indices[0]) * indices.size(), vk::BufferUsageFlagBits::eIndexBuffer, VMA_MEMORY_USAGE_GPU_ONLY, (void*)indices.data()))
     {
 
         Shader vertexShader("./shaders/triangle.vert.spv", device);
@@ -72,7 +79,8 @@ public:
         commandBuffer.setViewport(0, {vk::Viewport(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height), 0.0f, 1.0f)});
         commandBuffer.setScissor(0, {vk::Rect2D({0, 0}, {static_cast<uint32_t>(width), static_cast<uint32_t>(height)})});
         commandBuffer.bindVertexBuffers(0, {vertexBuffer.buffer}, {0});
-        commandBuffer.draw(vertices.size(), 1, 0, 0);
+        commandBuffer.bindIndexBuffer(indexBuffer.buffer, 0, vk::IndexType::eUint16);
+        commandBuffer.drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
     }
 };
 
