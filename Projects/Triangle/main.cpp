@@ -92,8 +92,8 @@ int main() {
     vkb::Swapchain swapchainOld = swap_ret.value();
     vk::SwapchainKHR swapchain = vk::SwapchainKHR(swapchainOld.swapchain);
 
-    Shader vertexShader("shaders/triangle.vert.spv", device);
-    Shader fragmentShader("shaders/triangle.frag.spv", device);
+    Shader vertexShader("./shaders/triangle.vert.spv", device);
+    Shader fragmentShader("./shaders/triangle.frag.spv", device);
 
     RenderPass renderPass(device, vk::Format(swapchainOld.image_format));
     renderPass.createRenderPass();

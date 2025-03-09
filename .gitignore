@@ -2,4 +2,4 @@
 out/
 /cmake-build-debug-visual-studio/
 .idea
-Triangle/shaders/target/
+Projects/Triangle/shaders/target/
