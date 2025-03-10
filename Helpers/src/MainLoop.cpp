@@ -28,7 +28,8 @@ MainLoop::MainLoop(int width, int height, std::string title):
     commandBuffers(allocateCommandBuffers()),
     imageIndex(0),
     currentFrame(0),
-    vmaAllocator(createVmaAllocator())
+    vmaAllocator(createVmaAllocator()),
+    descriptorPool(createDescriptorPool())
 {
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 
@@ -49,7 +50,7 @@ void MainLoop::run() {
         commandBuffers[currentFrame].begin(vk::CommandBufferBeginInfo({}));
         renderPass.beginRenderPass(swapchainFramebuffers[imageIndex], vk::Extent2D(width, height), commandBuffers[currentFrame]);
 
-        render(commandBuffers[currentFrame]);
+        render(commandBuffers[currentFrame], currentFrame);
 
         commandBuffers[currentFrame].endRenderPass();
         commandBuffers[currentFrame].end();
@@ -190,6 +191,15 @@ VmaAllocator MainLoop::createVmaAllocator() {
         throw std::runtime_error("Failed to create VMA allocator.");
     }
     return allocator;
+}
+
+vk::DescriptorPool MainLoop::createDescriptorPool() {
+    vk::DescriptorPoolSize uniformBufferPoolSize(vk::DescriptorType::eUniformBuffer, 1000);
+    vk::DescriptorPoolSize samplerPoolSize(vk::DescriptorType::eCombinedImageSampler, 1000);
+    std::vector<vk::DescriptorPoolSize> poolSizes = {uniformBufferPoolSize, samplerPoolSize};
+
+    vk::DescriptorPoolCreateInfo poolInfo({}, MAX_FRAMES_IN_FLIGHT, 1, poolSizes.data());
+    return device.createDescriptorPool(poolInfo);
 }
 
 vk::CommandBuffer MainLoop::beginSingleTimeCommands() {

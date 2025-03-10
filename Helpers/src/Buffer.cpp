@@ -6,13 +6,13 @@
 
 #include <vma/vk_mem_alloc.h>
 
-Buffer::Buffer(VmaAllocator& allocator, size_t size, vk::BufferUsageFlags bufferUsage, VmaMemoryUsage memoryUsage) {
+Buffer::Buffer(MainLoop& app, size_t size, vk::BufferUsageFlags bufferUsage, VmaMemoryUsage memoryUsage) {
     VkBufferCreateInfo vertexBufferCreateInfo = vk::BufferCreateInfo({}, size, bufferUsage, vk::SharingMode::eExclusive);
     VmaAllocationCreateInfo allocationCreateInfo = {};
     allocationCreateInfo.usage = memoryUsage;
     VmaAllocation allocation;
     VkBuffer vertexBufferOld;
-    vmaCreateBuffer(allocator, &vertexBufferCreateInfo, &allocationCreateInfo, &vertexBufferOld, &allocation, nullptr);
+    vmaCreateBuffer(app.vmaAllocator, &vertexBufferCreateInfo, &allocationCreateInfo, &vertexBufferOld, &allocation, nullptr);
     this->buffer = vk::Buffer(vertexBufferOld);
     this->allocation = allocation;
 }

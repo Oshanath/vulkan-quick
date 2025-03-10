@@ -54,6 +54,7 @@ public:
     std::vector<vk::Semaphore> renderFinishedSemaphores;
     std::vector<vk::Fence> inFlightFences;
     VmaAllocator vmaAllocator;
+    vk::DescriptorPool descriptorPool;
 
     uint32_t imageIndex;
     uint32_t currentFrame;
@@ -71,8 +72,9 @@ public:
     std::vector<vk::CommandBuffer> allocateCommandBuffers();
     void createSyncObjects();
     VmaAllocator createVmaAllocator();
+    vk::DescriptorPool createDescriptorPool();
 
-    virtual void render(vk::CommandBuffer& commandBuffer) = 0;
+    virtual void render(vk::CommandBuffer& commandBuffer, int currentFrame) = 0;
 
     vk::CommandBuffer beginSingleTimeCommands();
 };

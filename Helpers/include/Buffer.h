@@ -14,15 +14,15 @@ public:
     vk::Buffer buffer;
     VmaAllocation allocation;
 
-    Buffer(VmaAllocator& allocator, size_t size, vk::BufferUsageFlags bufferUsage, VmaMemoryUsage memoryUsage);
+    Buffer(MainLoop& app, size_t size, vk::BufferUsageFlags bufferUsage, VmaMemoryUsage memoryUsage);
     void copyData(VmaAllocator& allocator, void* data, size_t size);
 };
 
 static Buffer createBufferWithData(MainLoop& app, size_t size, vk::BufferUsageFlagBits bufferUsage, VmaMemoryUsage memoryUsage, void* data) {
-    Buffer stagingBuffer(app.vmaAllocator, size, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_TO_GPU);
+    Buffer stagingBuffer(app, size, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_TO_GPU);
     stagingBuffer.copyData(app.vmaAllocator, data, size);
 
-    Buffer buffer(app.vmaAllocator, size, bufferUsage | vk::BufferUsageFlagBits::eTransferDst, memoryUsage);
+    Buffer buffer(app, size, bufferUsage | vk::BufferUsageFlagBits::eTransferDst, memoryUsage);
     vk::CommandBuffer commandBuffer = app.beginSingleTimeCommands();
     vk::BufferCopy copyRegion(0, 0, size);
     commandBuffer.copyBuffer(stagingBuffer.buffer, buffer.buffer, copyRegion);

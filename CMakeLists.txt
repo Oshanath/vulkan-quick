@@ -17,6 +17,7 @@ add_subdirectory(external/glfw)
 add_subdirectory(external/glm)
 add_subdirectory(external/vma)
 
+add_subdirectory(Helpers)
 add_subdirectory(Projects/Triangle)
 add_subdirectory(Projects/TriangleWithVertexBuffers)
-add_subdirectory(Helpers)
+add_subdirectory(Projects/RotatingTriangleWithUniformBuffers)
