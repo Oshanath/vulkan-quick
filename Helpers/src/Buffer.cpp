@@ -10,7 +10,6 @@ Buffer::Buffer(MainLoop& app, size_t size, vk::BufferUsageFlags bufferUsage, Vma
     VkBufferCreateInfo vertexBufferCreateInfo = vk::BufferCreateInfo({}, size, bufferUsage, vk::SharingMode::eExclusive);
     VmaAllocationCreateInfo allocationCreateInfo = {};
     allocationCreateInfo.usage = memoryUsage;
-    VmaAllocation allocation;
     VkBuffer vertexBufferOld;
     vmaCreateBuffer(app.vmaAllocator, &vertexBufferCreateInfo, &allocationCreateInfo, &vertexBufferOld, &allocation, nullptr);
     this->buffer = vk::Buffer(vertexBufferOld);

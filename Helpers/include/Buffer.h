@@ -24,11 +24,8 @@ static Buffer createBufferWithData(MainLoop& app, size_t size, vk::BufferUsageFl
 
     Buffer buffer(app, size, bufferUsage | vk::BufferUsageFlagBits::eTransferDst, memoryUsage);
     vk::CommandBuffer commandBuffer = app.beginSingleTimeCommands();
-    vk::BufferCopy copyRegion(0, 0, size);
-    commandBuffer.copyBuffer(stagingBuffer.buffer, buffer.buffer, copyRegion);
-    commandBuffer.end();
-    app.graphicsQueue.submit({vk::SubmitInfo(0, nullptr, nullptr, 1, &commandBuffer, 0, nullptr)}, nullptr);
-    app.graphicsQueue.waitIdle();
+    commandBuffer.copyBuffer(stagingBuffer.buffer, buffer.buffer, vk::BufferCopy(0, 0, size));
+    app.endSingleTimeCommands(commandBuffer);
     return buffer;
 }
 

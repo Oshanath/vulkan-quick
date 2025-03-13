@@ -110,11 +110,15 @@ vkb::PhysicalDevice MainLoop::selectPhysicalDevice() {
     descriptorIndexingFeatures.descriptorBindingStorageBufferUpdateAfterBind = VK_TRUE;
     descriptorIndexingFeatures.descriptorBindingPartiallyBound = VK_TRUE;
 
+    vk::PhysicalDeviceFeatures features{};
+    features.samplerAnisotropy = VK_TRUE;
+
     vkb::PhysicalDeviceSelector physicalDeviceSelector({ vkbInstance });
     auto phys_ret = physicalDeviceSelector.set_surface(surface)
         .add_required_extension(VK_KHR_MAINTENANCE3_EXTENSION_NAME)    // needed for descriptor indexing in Vulkan 1.1
         .add_required_extension(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME) // only strictly needed on Vulkan 1.1
         .add_required_extension_features(descriptorIndexingFeatures)
+        .set_required_features(features)
         .set_minimum_version(1, 1) // require a vulkan 1.1 capable device
         .require_dedicated_transfer_queue()
         .select();
@@ -223,6 +227,12 @@ vk::CommandBuffer MainLoop::beginSingleTimeCommands() {
     commandBuffer.begin(beginInfo);
 
     return commandBuffer;
+}
+
+void MainLoop::endSingleTimeCommands(vk::CommandBuffer commandBuffer) {
+    commandBuffer.end();
+    graphicsQueue.submit({vk::SubmitInfo(0, nullptr, nullptr, 1, &commandBuffer, 0, nullptr)}, nullptr);
+    graphicsQueue.waitIdle();
 }
 
 size_t MainLoop::getAlignedUBOSize(size_t originalSize) {

@@ -3,3 +3,4 @@ out/
 /cmake-build-debug-visual-studio/
 .idea
 Projects/Triangle/shaders/target/
+Resources/*
