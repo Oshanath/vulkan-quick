@@ -13,6 +13,7 @@
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <GraphicsPipeline.h>
+#include <Image.h>
 
 #include <iostream>
 
@@ -29,6 +30,7 @@ public:
     std::vector<vk::Semaphore> imageAvailableSemaphores;
     std::vector<vk::Semaphore> renderFinishedSemaphores;
     std::vector<vk::Fence> inFlightFences;
+    Image depthImage;
 
     uint32_t imageIndex = 0;
     uint32_t currentFrame = 0;

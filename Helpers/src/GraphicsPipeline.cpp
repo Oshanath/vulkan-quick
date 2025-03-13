@@ -20,7 +20,8 @@ GraphicsPipeline::GraphicsPipeline(const vk::Device& device, RenderPass renderPa
     colorBlendAttachmentState = vk::PipelineColorBlendAttachmentState(VK_FALSE, vk::BlendFactor::eOne, vk::BlendFactor::eZero, vk::BlendOp::eAdd, vk::BlendFactor::eOne, vk::BlendFactor::eZero, vk::BlendOp::eAdd, vk::ColorComponentFlags(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA));
     colorBlendStateCreateInfo = vk::PipelineColorBlendStateCreateInfo({}, VK_FALSE, vk::LogicOp::eCopy, 1, &colorBlendAttachmentState, {0.0f, 0.0f, 0.0f, 0.0f});
     pipelineLayoutCreateInfo = vk::PipelineLayoutCreateInfo({}, 0, nullptr, 0, nullptr);
-    pipelineCreateInfo = vk::GraphicsPipelineCreateInfo({}, shaderStages.size(), shaderStages.data(), &vertexInputStateCreateInfo, &inputAssemblyStateCreateInfo, nullptr, &viewportStateCreateInfo, &rasterizationStateCreateInfo, &multisampleStateCreateInfo, nullptr, &colorBlendStateCreateInfo, &dynamicStateCreateInfo, pipelineLayout, renderPass.renderPass, 0, nullptr, -1);
+    depthStencilStateCreateInfo = vk::PipelineDepthStencilStateCreateInfo({}, VK_TRUE, VK_TRUE, vk::CompareOp::eLess, VK_FALSE, VK_FALSE, {}, {}, 0.0f, 1.0f);
+    pipelineCreateInfo = vk::GraphicsPipelineCreateInfo({}, shaderStages.size(), shaderStages.data(), &vertexInputStateCreateInfo, &inputAssemblyStateCreateInfo, nullptr, &viewportStateCreateInfo, &rasterizationStateCreateInfo, &multisampleStateCreateInfo, &depthStencilStateCreateInfo, &colorBlendStateCreateInfo, &dynamicStateCreateInfo, pipelineLayout, renderPass.renderPass, 0, nullptr, -1);
 }
 void GraphicsPipeline::createLayoutAndPipeline(vk::Device& device) {
     this->pipelineLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);

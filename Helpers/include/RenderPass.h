@@ -12,11 +12,14 @@ public:
     vk::RenderPass renderPass;
     vk::AttachmentDescription colorAttachment;
     vk::AttachmentReference colorAttachmentRef;
+    vk::AttachmentDescription depthAttachment;
+    vk::AttachmentReference depthAttachmentRef;
     vk::SubpassDescription subpass;
     vk::RenderPassCreateInfo renderPassCreateInfo;
+    vk::SubpassDependency dependency;
 
     RenderPass();
-    RenderPass(vk::Device& device, vk::Format format);
+    RenderPass(vk::Device& device, vk::Format format, vk::Format depthFormat);
     void createRenderPass(vk::Device& device);
 
     void beginRenderPass(vk::Framebuffer &swapchainFramebuffer, vk::Extent2D extent, vk::CommandBuffer &commandBuffer);

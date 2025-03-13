@@ -6,10 +6,8 @@ add_library(Helpers
     src/RenderPass.cpp
     src/MainLoop.cpp
     src/Buffer.cpp
-        src/Texture.cpp
-        include/Texture.h
-        src/Application.cpp
-        include/Application.h
+    src/Image.cpp
+    src/Application.cpp
 )
 
 target_link_libraries(Helpers

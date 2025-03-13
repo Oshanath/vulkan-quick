@@ -28,6 +28,7 @@ public:
     vk::PipelineColorBlendAttachmentState colorBlendAttachmentState;
     vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo;
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo;
+    vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo;
     vk::Pipeline graphicsPipeline;
 
     explicit GraphicsPipeline(const vk::Device& device, RenderPass renderPass, uint32_t width, uint32_t height);

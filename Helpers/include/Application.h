@@ -27,6 +27,7 @@
 class Application {
 public:
     const int MAX_FRAMES_IN_FLIGHT = 2;
+    const vk::Format depthFormat = vk::Format::eD32Sfloat;
 
     GLFWwindow* window;
     int width;

@@ -18,6 +18,8 @@ MainLoop::MainLoop(int width, int height, std::string title):
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 
     createSyncObjects();
+
+    depthImage = createDepthImage(*this);
 }
 
 void MainLoop::run() {
@@ -65,7 +67,7 @@ vkb::Swapchain MainLoop::createSwapchain() {
 }
 
 RenderPass MainLoop::createRenderPass() {
-    RenderPass renderPass(device, vk::Format(vkbSwapchain.image_format));
+    RenderPass renderPass(device, vk::Format(vkbSwapchain.image_format), depthFormat);
     renderPass.createRenderPass(device);
     return std::move(renderPass);
 }
@@ -74,7 +76,8 @@ std::vector<vk::Framebuffer> MainLoop::createSwapchainFramebuffers() {
     std::vector<vk::Framebuffer> swapchainFramebuffers(vkbSwapchain.image_count);
     for (size_t i = 0; i < vkbSwapchain.image_count; i++) {
         std::vector<vk::ImageView> attachments = {
-            vkbSwapchain.get_image_views().value()[i]
+            vkbSwapchain.get_image_views().value()[i],
+            depthImage.imageView
         };
         vk::FramebufferCreateInfo framebufferInfo({}, renderPass.renderPass, attachments.size(), attachments.data(), width, height, 1);
         swapchainFramebuffers[i] = device.createFramebuffer(framebufferInfo);
