@@ -22,35 +22,20 @@
 
 #include <vma/vk_mem_alloc.h>
 
+#include "Application.h"
 #include "Shader.h"
 #include "VkBootstrap.h"
 
-class MainLoop {
+class MainLoop : public Application{
 public:
-    const int MAX_FRAMES_IN_FLIGHT = 2;
-
-    GLFWwindow* window;
-    int width;
-    int height;
-    uint32_t extensionCount = 0;
-
-    vkb::Instance vkbInstance;
-    VkSurfaceKHR surface;
-    vkb::PhysicalDevice vkbPhysicalDevice;
-    vkb::Device vkbDevice;
-    vk::Device device;
     vkb::Swapchain vkbSwapchain;
     vk::SwapchainKHR swapchain;
-    vk::Queue graphicsQueue;
     RenderPass renderPass;
     std::vector<vk::Framebuffer> swapchainFramebuffers;
-    vk::CommandPool commandPool;
     std::vector<vk::CommandBuffer> commandBuffers;
     std::vector<vk::Semaphore> imageAvailableSemaphores;
     std::vector<vk::Semaphore> renderFinishedSemaphores;
     std::vector<vk::Fence> inFlightFences;
-    VmaAllocator vmaAllocator;
-    vk::DescriptorPool descriptorPool;
 
     uint32_t imageIndex = 0;
     uint32_t currentFrame = 0;
@@ -59,24 +44,11 @@ public:
     void run();
     virtual void render(vk::CommandBuffer& commandBuffer, int currentFrame) = 0;
 
-    GLFWwindow* createWindow(int width, int height, std::string title);
-    vkb::Instance createInstance();
-    VkSurfaceKHR createSurface();
-    vkb::PhysicalDevice selectPhysicalDevice();
-    vkb::Device createDevice();
-    vk::Queue getGraphicsQueue();
     vkb::Swapchain createSwapchain();
     RenderPass createRenderPass();
     std::vector<vk::Framebuffer> createSwapchainFramebuffers();
-    vk::CommandPool createCommandPool();
     std::vector<vk::CommandBuffer> allocateCommandBuffers();
     void createSyncObjects();
-    VmaAllocator createVmaAllocator();
-    vk::DescriptorPool createDescriptorPool();
-
-    vk::CommandBuffer beginSingleTimeCommands();
-    void endSingleTimeCommands(vk::CommandBuffer commandBuffer);
-    size_t getAlignedUBOSize(size_t originalSize);
 };
 
 

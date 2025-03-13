@@ -7,7 +7,8 @@
 
 #include <vma/vk_mem_alloc.h>
 #include <vulkan/vulkan.hpp>
-#include "MainLoop.h"
+
+#include "Application.h"
 
 class Texture {
 public:
@@ -16,7 +17,7 @@ public:
     vk::ImageView imageView;
     vk::Sampler sampler;
 
-    Texture(MainLoop& app, std::string path);
+    Texture(Application& app, std::string path);
 };
 
 

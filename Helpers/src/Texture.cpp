@@ -11,7 +11,7 @@
 
 #include <vulkan/vulkan.hpp>
 
-Texture::Texture(MainLoop& app, std::string path) {
+Texture::Texture(Application& app, std::string path) {
     int width, height, channels;
     stbi_uc* pixels = stbi_load("Resources/texture.jpg", &width, &height, &channels, STBI_rgb_alpha);
     vk::DeviceSize imageSize = width * height * 4;

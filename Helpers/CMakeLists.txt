@@ -8,6 +8,8 @@ add_library(Helpers
     src/Buffer.cpp
         src/Texture.cpp
         include/Texture.h
+        src/Application.cpp
+        include/Application.h
 )
 
 target_link_libraries(Helpers

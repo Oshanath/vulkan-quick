@@ -7,18 +7,18 @@
 
 #include <vma/vk_mem_alloc.h>
 #include <vulkan/vulkan.hpp>
-#include "MainLoop.h"
+#include "Application.h"
 
 class Buffer {
 public:
     vk::Buffer buffer;
     VmaAllocation allocation;
 
-    Buffer(MainLoop& app, size_t size, vk::BufferUsageFlags bufferUsage, VmaMemoryUsage memoryUsage);
+    Buffer(Application& app, size_t size, vk::BufferUsageFlags bufferUsage, VmaMemoryUsage memoryUsage);
     void copyData(VmaAllocator& allocator, void* data, size_t size, size_t offset = 0);
 };
 
-static Buffer createBufferWithData(MainLoop& app, size_t size, vk::BufferUsageFlagBits bufferUsage, VmaMemoryUsage memoryUsage, void* data) {
+static Buffer createBufferWithData(Application& app, size_t size, vk::BufferUsageFlagBits bufferUsage, VmaMemoryUsage memoryUsage, void* data) {
     Buffer stagingBuffer(app, size, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_TO_GPU);
     stagingBuffer.copyData(app.vmaAllocator, data, size);
 
