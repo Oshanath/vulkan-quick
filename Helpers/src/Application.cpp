@@ -8,7 +8,7 @@
 #include <vma/vk_mem_alloc.h>
 
 Application::Application(int width, int height, std::string title):
-    width(width), height(height)
+    width(width), height(height), depthFormat(vk::Format::eD32Sfloat)
 {
     window = createWindow(width, height, std::move(title));
     vkbInstance = createInstance();

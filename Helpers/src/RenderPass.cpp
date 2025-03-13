@@ -15,7 +15,7 @@ RenderPass::RenderPass(vk::Device& device, vk::Format format, vk::Format depthFo
     depthAttachmentRef = vk::AttachmentReference(1, vk::ImageLayout::eDepthStencilAttachmentOptimal);
     subpass = vk::SubpassDescription({}, vk::PipelineBindPoint::eGraphics, 0, nullptr, 1, &colorAttachmentRef, nullptr, &depthAttachmentRef, 0, nullptr);
 
-    std::array attachments = {colorAttachment, depthAttachment};
+    attachments = {colorAttachment, depthAttachment};
     renderPassCreateInfo = vk::RenderPassCreateInfo({}, attachments.size(), attachments.data(), 1, &subpass);
 }
 

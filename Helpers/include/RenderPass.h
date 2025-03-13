@@ -17,6 +17,7 @@ public:
     vk::SubpassDescription subpass;
     vk::RenderPassCreateInfo renderPassCreateInfo;
     vk::SubpassDependency dependency;
+    std::vector<vk::AttachmentDescription> attachments;
 
     RenderPass();
     RenderPass(vk::Device& device, vk::Format format, vk::Format depthFormat);

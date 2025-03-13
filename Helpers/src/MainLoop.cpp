@@ -12,14 +12,11 @@ MainLoop::MainLoop(int width, int height, std::string title):
     vkbSwapchain = createSwapchain();
     swapchain = vkbSwapchain.swapchain;
     renderPass = createRenderPass();
+    depthImage = createDepthImage(*this);
     swapchainFramebuffers = createSwapchainFramebuffers();
     commandBuffers = allocateCommandBuffers();
-
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-
     createSyncObjects();
-
-    depthImage = createDepthImage(*this);
 }
 
 void MainLoop::run() {
