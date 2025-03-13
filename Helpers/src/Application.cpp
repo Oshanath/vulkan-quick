@@ -4,6 +4,9 @@
 
 #include "Application.h"
 
+#define VMA_IMPLEMENTATION
+#include <vma/vk_mem_alloc.h>
+
 Application::Application(int width, int height, std::string title):
     width(width), height(height)
 {

@@ -22,7 +22,6 @@
 
 #include <vma/vk_mem_alloc.h>
 
-#include "Shader.h"
 #include "VkBootstrap.h"
 
 class Application {

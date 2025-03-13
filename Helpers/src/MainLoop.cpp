@@ -6,9 +6,6 @@
 
 #include "MainLoop.h"
 
-#define VMA_IMPLEMENTATION
-#include <vma/vk_mem_alloc.h>
-
 MainLoop::MainLoop(int width, int height, std::string title):
     Application(width, height, std::move(title))
 {
