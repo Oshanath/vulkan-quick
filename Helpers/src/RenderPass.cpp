@@ -4,17 +4,15 @@
 
 #include "RenderPass.h"
 
-RenderPass::RenderPass(vk::Device& device, vk::Format format):
-    device(device),
-    colorAttachment({}, format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined, vk::ImageLayout::ePresentSrcKHR),
-    colorAttachmentRef(0, vk::ImageLayout::eColorAttachmentOptimal),
-    subpass({}, vk::PipelineBindPoint::eGraphics, 0, nullptr, 1, &colorAttachmentRef, nullptr, nullptr, 0, nullptr),
-    renderPassCreateInfo({}, 1, &colorAttachment, 1, &subpass)
+RenderPass::RenderPass(vk::Device& device, vk::Format format)
 {
-
+    colorAttachment = vk::AttachmentDescription({}, format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined, vk::ImageLayout::ePresentSrcKHR);
+    colorAttachmentRef = vk::AttachmentReference(0, vk::ImageLayout::eColorAttachmentOptimal);
+    subpass = vk::SubpassDescription({}, vk::PipelineBindPoint::eGraphics, 0, nullptr, 1, &colorAttachmentRef, nullptr, nullptr, 0, nullptr);
+    renderPassCreateInfo = vk::RenderPassCreateInfo({}, 1, &colorAttachment, 1, &subpass);
 }
 
-void RenderPass::createRenderPass() {
+void RenderPass::createRenderPass(vk::Device& device) {
     vk::SubpassDependency dependency(VK_SUBPASS_EXTERNAL, 0, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eColorAttachmentOutput, {}, vk::AccessFlagBits::eColorAttachmentWrite);
     renderPassCreateInfo.dependencyCount = 1;
     renderPassCreateInfo.pDependencies = &dependency;
