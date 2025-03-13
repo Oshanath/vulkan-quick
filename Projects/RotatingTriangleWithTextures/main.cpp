@@ -103,7 +103,7 @@ public:
         graphicsPipeline.vertexInputStateCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
         graphicsPipeline.vertexInputStateCreateInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
         graphicsPipeline.pipelineLayoutCreateInfo = vk::PipelineLayoutCreateInfo({}, 1, &descriptorSetLayout, 0, nullptr);
-        graphicsPipeline.createLayoutAndPipeline();
+        graphicsPipeline.createLayoutAndPipeline(device);
     }
 
     void render(vk::CommandBuffer& commandBuffer, int currentFrame) override {
