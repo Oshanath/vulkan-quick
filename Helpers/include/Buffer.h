@@ -15,7 +15,7 @@ public:
     VmaAllocation allocation;
 
     Buffer(MainLoop& app, size_t size, vk::BufferUsageFlags bufferUsage, VmaMemoryUsage memoryUsage);
-    void copyData(VmaAllocator& allocator, void* data, size_t size);
+    void copyData(VmaAllocator& allocator, void* data, size_t size, size_t offset = 0);
 };
 
 static Buffer createBufferWithData(MainLoop& app, size_t size, vk::BufferUsageFlagBits bufferUsage, VmaMemoryUsage memoryUsage, void* data) {

@@ -17,10 +17,11 @@ Buffer::Buffer(MainLoop& app, size_t size, vk::BufferUsageFlags bufferUsage, Vma
     this->allocation = allocation;
 }
 
-void Buffer::copyData(VmaAllocator&allocator, void *data, size_t size) {
+void Buffer::copyData(VmaAllocator&allocator, void *data, size_t size, size_t offset) {
     void* mappedData = nullptr;
     vmaMapMemory(allocator, this->allocation, &mappedData);
-    memcpy(mappedData, data, size);
+    memcpy(static_cast<char*>(mappedData) + offset, data, size);
+    vmaFlushAllocation(allocator, this->allocation, offset, size);
     vmaUnmapMemory(allocator, this->allocation);
-    vmaFlushAllocation(allocator, this->allocation, 0, size);
 }
+

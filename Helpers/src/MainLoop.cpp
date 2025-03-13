@@ -100,8 +100,21 @@ VkSurfaceKHR MainLoop::createSurface() {
 }
 
 vkb::PhysicalDevice MainLoop::selectPhysicalDevice() {
+
+    vk::PhysicalDeviceDescriptorIndexingFeatures descriptorIndexingFeatures{};
+    descriptorIndexingFeatures.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
+    descriptorIndexingFeatures.descriptorBindingSampledImageUpdateAfterBind = VK_TRUE;
+    descriptorIndexingFeatures.shaderUniformBufferArrayNonUniformIndexing = VK_TRUE;
+    descriptorIndexingFeatures.descriptorBindingUniformBufferUpdateAfterBind = VK_TRUE;
+    descriptorIndexingFeatures.shaderStorageBufferArrayNonUniformIndexing = VK_TRUE;
+    descriptorIndexingFeatures.descriptorBindingStorageBufferUpdateAfterBind = VK_TRUE;
+    descriptorIndexingFeatures.descriptorBindingPartiallyBound = VK_TRUE;
+
     vkb::PhysicalDeviceSelector physicalDeviceSelector({ vkbInstance });
     auto phys_ret = physicalDeviceSelector.set_surface(surface)
+        .add_required_extension(VK_KHR_MAINTENANCE3_EXTENSION_NAME)    // needed for descriptor indexing in Vulkan 1.1
+        .add_required_extension(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME) // only strictly needed on Vulkan 1.1
+        .add_required_extension_features(descriptorIndexingFeatures)
         .set_minimum_version(1, 1) // require a vulkan 1.1 capable device
         .require_dedicated_transfer_queue()
         .select();
@@ -112,7 +125,7 @@ vkb::PhysicalDevice MainLoop::selectPhysicalDevice() {
 }
 
 vkb::Device MainLoop::createDevice() {
-    vkb::DeviceBuilder device_builder{ vkbPhysicalDevice };
+    auto device_builder = vkb::DeviceBuilder{ vkbPhysicalDevice };
     auto dev_ret = device_builder.build();
     if (!dev_ret) {
         throw std::runtime_error("Failed to create Vulkan device.");
@@ -194,11 +207,11 @@ VmaAllocator MainLoop::createVmaAllocator() {
 }
 
 vk::DescriptorPool MainLoop::createDescriptorPool() {
-    vk::DescriptorPoolSize uniformBufferPoolSize(vk::DescriptorType::eUniformBuffer, 1000);
+    vk::DescriptorPoolSize uniformBufferPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1000);
     vk::DescriptorPoolSize samplerPoolSize(vk::DescriptorType::eCombinedImageSampler, 1000);
-    std::vector<vk::DescriptorPoolSize> poolSizes = {uniformBufferPoolSize, samplerPoolSize};
+    std::vector poolSizes = {uniformBufferPoolSize, samplerPoolSize};
 
-    vk::DescriptorPoolCreateInfo poolInfo({}, MAX_FRAMES_IN_FLIGHT, 1, poolSizes.data());
+    vk::DescriptorPoolCreateInfo poolInfo({vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind}, MAX_FRAMES_IN_FLIGHT, 1, poolSizes.data());
     return device.createDescriptorPool(poolInfo);
 }
 
@@ -210,4 +223,9 @@ vk::CommandBuffer MainLoop::beginSingleTimeCommands() {
     commandBuffer.begin(beginInfo);
 
     return commandBuffer;
+}
+
+size_t MainLoop::getAlignedUBOSize(size_t originalSize) {
+    size_t minUBOAlignment = vkbPhysicalDevice.properties.limits.minUniformBufferOffsetAlignment;
+    return (originalSize + minUBOAlignment - 1) & ~(minUBOAlignment - 1);
 }

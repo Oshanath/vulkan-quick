@@ -77,6 +77,7 @@ public:
     virtual void render(vk::CommandBuffer& commandBuffer, int currentFrame) = 0;
 
     vk::CommandBuffer beginSingleTimeCommands();
+    size_t getAlignedUBOSize(size_t originalSize);
 };
 
 
