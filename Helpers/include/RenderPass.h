@@ -15,6 +15,7 @@ public:
     vk::SubpassDescription subpass;
     vk::RenderPassCreateInfo renderPassCreateInfo;
 
+    RenderPass();
     RenderPass(vk::Device& device, vk::Format format);
     void createRenderPass(vk::Device& device);
 

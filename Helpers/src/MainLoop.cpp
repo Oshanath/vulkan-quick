@@ -11,26 +11,24 @@
 
 MainLoop::MainLoop(int width, int height, std::string title):
     width(width),
-    height(height),
-    window(createWindow(width, height, std::move(title))),
-    extensionCount(0),
-    vkbInstance(createInstance()),
-    surface(createSurface()),
-    vkbPhysicalDevice(selectPhysicalDevice()),
-    vkbDevice(createDevice()),
-    device(vkbDevice.device),
-    graphicsQueue(getGraphicsQueue()),
-    vkbSwapchain(createSwapchain()),
-    swapchain(vkbSwapchain.swapchain),
-    renderPass(createRenderPass()),
-    swapchainFramebuffers(createSwapchainFramebuffers()),
-    commandPool(createCommandPool()),
-    commandBuffers(allocateCommandBuffers()),
-    imageIndex(0),
-    currentFrame(0),
-    vmaAllocator(createVmaAllocator()),
-    descriptorPool(createDescriptorPool())
+    height(height)
 {
+    window = createWindow(width, height, std::move(title));
+    vkbInstance = createInstance();
+    surface = createSurface();
+    vkbPhysicalDevice = selectPhysicalDevice();
+    vkbDevice = createDevice();
+    device = vkbDevice.device;
+    vkbSwapchain = createSwapchain();
+    swapchain = vkbSwapchain.swapchain;
+    graphicsQueue = getGraphicsQueue();
+    renderPass = createRenderPass();
+    swapchainFramebuffers = createSwapchainFramebuffers();
+    commandPool = createCommandPool();
+    commandBuffers = allocateCommandBuffers();
+    vmaAllocator = createVmaAllocator();
+    descriptorPool = createDescriptorPool();
+
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 
     createSyncObjects();

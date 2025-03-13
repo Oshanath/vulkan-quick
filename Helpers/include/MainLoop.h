@@ -29,23 +29,19 @@ class MainLoop {
 public:
     const int MAX_FRAMES_IN_FLIGHT = 2;
 
-    MainLoop(int width, int height, std::string title);
-    void run();
-
     GLFWwindow* window;
     int width;
     int height;
-    uint32_t extensionCount;
+    uint32_t extensionCount = 0;
 
     vkb::Instance vkbInstance;
     VkSurfaceKHR surface;
     vkb::PhysicalDevice vkbPhysicalDevice;
     vkb::Device vkbDevice;
-    vkb::Swapchain vkbSwapchain;
-
     vk::Device device;
-    vk::Queue graphicsQueue;
+    vkb::Swapchain vkbSwapchain;
     vk::SwapchainKHR swapchain;
+    vk::Queue graphicsQueue;
     RenderPass renderPass;
     std::vector<vk::Framebuffer> swapchainFramebuffers;
     vk::CommandPool commandPool;
@@ -56,8 +52,12 @@ public:
     VmaAllocator vmaAllocator;
     vk::DescriptorPool descriptorPool;
 
-    uint32_t imageIndex;
-    uint32_t currentFrame;
+    uint32_t imageIndex = 0;
+    uint32_t currentFrame = 0;
+
+    MainLoop(int width, int height, std::string title);
+    void run();
+    virtual void render(vk::CommandBuffer& commandBuffer, int currentFrame) = 0;
 
     GLFWwindow* createWindow(int width, int height, std::string title);
     vkb::Instance createInstance();
@@ -73,8 +73,6 @@ public:
     void createSyncObjects();
     VmaAllocator createVmaAllocator();
     vk::DescriptorPool createDescriptorPool();
-
-    virtual void render(vk::CommandBuffer& commandBuffer, int currentFrame) = 0;
 
     vk::CommandBuffer beginSingleTimeCommands();
     void endSingleTimeCommands(vk::CommandBuffer commandBuffer);

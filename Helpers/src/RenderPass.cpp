@@ -4,6 +4,9 @@
 
 #include "RenderPass.h"
 
+RenderPass::RenderPass() {
+}
+
 RenderPass::RenderPass(vk::Device& device, vk::Format format)
 {
     colorAttachment = vk::AttachmentDescription({}, format, vk::SampleCountFlagBits::e1, vk::AttachmentLoadOp::eClear, vk::AttachmentStoreOp::eStore, vk::AttachmentLoadOp::eDontCare, vk::AttachmentStoreOp::eDontCare, vk::ImageLayout::eUndefined, vk::ImageLayout::ePresentSrcKHR);
