@@ -8,6 +8,8 @@ add_library(Helpers
     src/Buffer.cpp
     src/Image.cpp
     src/Application.cpp
+        src/Camera.cpp
+        include/Camera.h
 )
 
 target_link_libraries(Helpers

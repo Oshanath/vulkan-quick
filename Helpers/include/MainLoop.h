@@ -18,6 +18,7 @@
 #include <iostream>
 
 #include "Application.h"
+#include "Camera.h"
 #include "VkBootstrap.h"
 
 class MainLoop : public Application{
@@ -31,6 +32,7 @@ public:
     std::vector<vk::Semaphore> renderFinishedSemaphores;
     std::vector<vk::Fence> inFlightFences;
     Image depthImage;
+    Camera camera;
 
     uint32_t imageIndex = 0;
     uint32_t currentFrame = 0;
