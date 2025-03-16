@@ -7,17 +7,16 @@
 
 #include <chrono>
 #include <Image.h>
-#include <Model.h>
 
 #include "Shader.h"
 #include "VkBootstrap.h"
 #include "MainLoop.h"
 
 #include "Buffer.h"
+#include "Scene.h"
 #include "vma/vk_mem_alloc.h"
 
 struct UniformBufferObject {
-    glm::mat4 model;
     glm::mat4 view;
     glm::mat4 proj;
 };
@@ -29,7 +28,9 @@ public:
 
     Buffer vertexBuffer;
     Buffer indexBuffer;
-    Model trashGod;
+    Scene scene;
+    Model* trashGod;
+    Model* trashGod2;
 
     size_t alignedUBOSize = getAlignedUBOSize(sizeof(UniformBufferObject));
     size_t uniformBufferSize = alignedUBOSize * MAX_FRAMES_IN_FLIGHT;
@@ -52,15 +53,17 @@ public:
         MainLoop(width, height, title),
         uniformBuffer(*this, uniformBufferSize, vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU)
     {
-        trashGod = Model(*this, "Resources/trashgod/scene.fbx");
-        vertexBuffer = createBufferWithData(*this, sizeof(Vertex) * trashGod.vertices.size(), vk::BufferUsageFlagBits::eVertexBuffer, VMA_MEMORY_USAGE_GPU_ONLY, (void*)trashGod.vertices.data());
-        indexBuffer = createBufferWithData(*this, sizeof(uint32_t) * trashGod.indices.size(), vk::BufferUsageFlagBits::eIndexBuffer, VMA_MEMORY_USAGE_GPU_ONLY, (void*)trashGod.indices.data());
+        trashGod = scene.addModel(*this, "Resources/trashGod/scene.fbx", 1.0f, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
+        trashGod2 = scene.addModel(*this, "Resources/trashGod/scene.fbx", 1.0f, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::vec3(0.0f, 0.0f, 5000.0f));
+        scene.generateBuffers(*this);
+        vertexBuffer = createBufferWithData(*this, sizeof(Vertex) * scene.vertices.size(), vk::BufferUsageFlagBits::eVertexBuffer, VMA_MEMORY_USAGE_GPU_ONLY, (void*)scene.vertices.data());
+        indexBuffer = createBufferWithData(*this, sizeof(uint32_t) * scene.indices.size(), vk::BufferUsageFlagBits::eIndexBuffer, VMA_MEMORY_USAGE_GPU_ONLY, (void*)scene.indices.data());
 
         vk::DescriptorBufferInfo bufferInfo(uniformBuffer.buffer, 0, alignedUBOSize);
         vk::DescriptorImageInfo imageInfo(sampler, texture.imageView, vk::ImageLayout::eShaderReadOnlyOptimal);
-        vk::DescriptorBufferInfo perMeshBufferInfo(trashGod.perMeshBuffer.buffer, 0, sizeof(PerMeshData) * trashGod.perMeshData.size());
-        vk::DescriptorBufferInfo perInstanceBufferInfo(trashGod.perInstanceBuffer.buffer, 0, sizeof(PerInstanceData) * trashGod.perInstanceData.size());
-        vk::DescriptorBufferInfo materialBufferInfo(trashGod.materialBuffer.buffer, 0, sizeof(Material) * trashGod.materials.size());
+        vk::DescriptorBufferInfo perMeshBufferInfo(scene.perMeshBuffer.buffer, 0, sizeof(PerMeshData) * scene.perMeshData.size());
+        vk::DescriptorBufferInfo perInstanceBufferInfo(scene.perInstanceBuffer.buffer, 0, sizeof(PerInstanceData) * scene.perInstanceData.size());
+        vk::DescriptorBufferInfo materialBufferInfo(scene.materialBuffer.buffer, 0, sizeof(Material) * scene.materials.size());
 
         std::array descriptorWrites = {
             vk::WriteDescriptorSet(descriptorSet, 0, 0, 1, vk::DescriptorType::eUniformBufferDynamic, nullptr, &bufferInfo),
@@ -96,9 +99,8 @@ public:
         float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
         UniformBufferObject ubo{
-            .model = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)),
             .view = camera.getViewMatrix(),
-            .proj = glm::perspective(glm::radians(45.0f), width / (float) height, 0.1f, 100000.0f)
+            .proj = glm::perspective(glm::radians(45.0f), width / (float) height, 10.0f, 100000.0f)
         };
         ubo.proj[1][1] *= -1;
         uniformBuffer.copyData(vmaAllocator, &ubo, sizeof(ubo), currentFrame * alignedUBOSize);
@@ -110,7 +112,7 @@ public:
         commandBuffer.setScissor(0, {vk::Rect2D({0, 0}, {static_cast<uint32_t>(width), static_cast<uint32_t>(height)})});
         commandBuffer.bindVertexBuffers(0, {vertexBuffer.buffer}, {0});
         commandBuffer.bindIndexBuffer(indexBuffer.buffer, 0, vk::IndexType::eUint32);
-        commandBuffer.drawIndexedIndirect(trashGod.indirectCommandsBuffer.buffer, 0, static_cast<uint32_t>(trashGod.meshes.size()), sizeof(vk::DrawIndexedIndirectCommand));
+        commandBuffer.drawIndexedIndirect(scene.indirectCommandsBuffer.buffer, 0, scene.meshCount, sizeof(vk::DrawIndexedIndirectCommand));
     }
 };
 

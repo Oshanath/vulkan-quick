@@ -9,7 +9,8 @@ add_library(Helpers
     src/Image.cpp
     src/Application.cpp
     src/Camera.cpp
-    src/Model.cpp
+        src/Scene.cpp
+        include/Scene.h
 )
 
 target_link_libraries(Helpers

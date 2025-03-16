@@ -1,9 +1,10 @@
 //
-// Created by User on 3/15/2025.
+// Created by User on 3/16/2025.
 //
 
-#ifndef MODEL_H
-#define MODEL_H
+#ifndef SCENE_H
+#define SCENE_H
+
 #include <Buffer.h>
 #include <string>
 
@@ -45,6 +46,7 @@ class Mesh {
 public:
     uint32_t vertexOffset;
     uint32_t indexOffset;
+    uint32_t vertexCount;
     uint32_t indexCount;
     uint32_t materialIndex;
     std::vector<PerInstanceData> perInstanceData;
@@ -54,23 +56,36 @@ public:
 
 class Model {
 public:
-    std::vector<Vertex> vertices;
-    std::vector<uint32_t> indices;
-    std::vector<Mesh> meshes;
-    std::vector<PerInstanceData> perInstanceData;
-    std::vector<PerMeshData> perMeshData;
-    std::vector<Material> materials;
-    Buffer indirectCommandsBuffer;
-    Buffer perInstanceBuffer;
-    Buffer perMeshBuffer;
-    Buffer materialBuffer;
+    float scaling = 1.0f;
+    glm::mat4 rotation = glm::mat4(1.0f);
+    glm::vec3 translation = glm::vec3(0.0f);
 
-    Model(){}
-    Model(Application& app, std::string path);
+    std::vector<Mesh> meshes;
 };
 
 static glm::mat4 convertAssimpMat4ToGlm(const aiMatrix4x4 &m) {
     return glm::transpose(glm::make_mat4(&m.a1));
 }
 
-#endif //MODEL_H
+class Scene {
+public:
+    std::vector<Model> models;
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> indices;
+    std::vector<Material> materials;
+    std::vector<PerInstanceData> perInstanceData;
+    std::vector<PerMeshData> perMeshData;
+    uint32_t meshCount = 0;
+
+    Buffer indirectCommandsBuffer;
+    Buffer perInstanceBuffer;
+    Buffer perMeshBuffer;
+    Buffer materialBuffer;
+
+    Model* addModel(Application& app, std::string path, float scaling = 1.0f, glm::mat4 rotation = glm::mat4(1.0f), glm::vec3 translation = glm::vec3(0.0f));
+    void generateBuffers(Application& app);
+};
+
+
+
+#endif //SCENE_H

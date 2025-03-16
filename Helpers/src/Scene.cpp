@@ -1,8 +1,8 @@
 //
-// Created by User on 3/15/2025.
+// Created by User on 3/16/2025.
 //
 
-#include "Model.h"
+#include "Scene.h"
 
 #include <queue>
 #include <stdexcept>
@@ -15,13 +15,17 @@
 #define VULKAN_HPP_STORAGE_DISPATCH_GLOBALS
 #include <vulkan/vulkan.hpp>
 
-
-Model::Model(Application& app, std::string path) {
+Model* Scene::addModel(Application& app, std::string path, float scaling, glm::mat4 rotation, glm::vec3 translation) {
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile( path, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType);
     if (scene == nullptr) {
         throw std::runtime_error("Failed to load model: " + path);
     }
+
+    Model model;
+    model.scaling = scaling;
+    model.rotation = rotation;
+    model.translation = translation;
 
     for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
         Mesh mesh;
@@ -44,12 +48,13 @@ Model::Model(Application& app, std::string path) {
         }
 
         mesh.indexCount = indices.size() - mesh.indexOffset;
+        mesh.vertexCount = vertices.size() - mesh.vertexOffset;
         mesh.materialIndex = aiMesh->mMaterialIndex;
-        meshes.push_back(mesh);
+        model.meshes.push_back(mesh);
     }
 
     std::queue<std::pair<const aiNode*, glm::mat4>> nodes;
-    nodes.push({scene->mRootNode, convertAssimpMat4ToGlm(scene->mRootNode->mTransformation)});
+    nodes.push({scene->mRootNode, glm::translate(glm::mat4(1.0f), model.translation) * model.rotation * glm::scale(glm::mat4(1.0f), glm::vec3(model.scaling)) * convertAssimpMat4ToGlm(scene->mRootNode->mTransformation)});
 
     while (!nodes.empty()) {
         std::pair<const aiNode*, glm::mat4> entry = nodes.front();
@@ -66,7 +71,7 @@ Model::Model(Application& app, std::string path) {
         for (int i = 0; i < node->mNumMeshes; i++) {
             PerInstanceData data;
             data.model = parentTransform;
-            meshes[node->mMeshes[i]].perInstanceData.push_back(data);
+            model.meshes[node->mMeshes[i]].perInstanceData.push_back(data);
         }
     }
 
@@ -80,26 +85,32 @@ Model::Model(Application& app, std::string path) {
         materials.push_back(mat);
     }
 
-    for (Mesh &mesh : meshes) {
-        perInstanceData.insert(perInstanceData.end(), mesh.perInstanceData.begin(), mesh.perInstanceData.end());
-        PerMeshData data;
-        data.startInstance = perInstanceData.size() - mesh.perInstanceData.size();
-        data.materialIndex = mesh.materialIndex;
-        perMeshData.push_back(data);
-    }
+    meshCount += model.meshes.size();
+    models.push_back(model);
+    return &models.back();
+}
 
+void Scene::generateBuffers(Application &app) {
     std::vector<vk::DrawIndexedIndirectCommand> indirectCommands;
-    for (Mesh &mesh : meshes) {
-        vk::DrawIndexedIndirectCommand command;
-        command.firstIndex = mesh.indexOffset;
-        command.indexCount = mesh.indexCount;
-        command.firstInstance = 0;
-        command.instanceCount = mesh.perInstanceData.size();
-        command.vertexOffset = mesh.vertexOffset;
-        indirectCommands.push_back(command);
+
+    for (Model &model : models) {
+        for (Mesh &mesh : model.meshes) {
+            perInstanceData.insert(perInstanceData.end(), mesh.perInstanceData.begin(), mesh.perInstanceData.end());
+            PerMeshData data;
+            data.startInstance = perInstanceData.size() - mesh.perInstanceData.size();
+            data.materialIndex = mesh.materialIndex;
+            perMeshData.push_back(data);
+
+            vk::DrawIndexedIndirectCommand command;
+            command.firstIndex = mesh.indexOffset;
+            command.indexCount = mesh.indexCount;
+            command.firstInstance = 0;
+            command.instanceCount = mesh.perInstanceData.size();
+            command.vertexOffset = mesh.vertexOffset;
+            indirectCommands.push_back(command);
+        }
     }
     indirectCommandsBuffer = createBufferWithData(app, sizeof(vk::DrawIndexedIndirectCommand) * indirectCommands.size(), vk::BufferUsageFlagBits::eIndirectBuffer, VMA_MEMORY_USAGE_GPU_ONLY, indirectCommands.data());
-
     perInstanceBuffer = createBufferWithData(app, sizeof(PerInstanceData) * perInstanceData.size(), vk::BufferUsageFlagBits::eStorageBuffer, VMA_MEMORY_USAGE_GPU_ONLY, perInstanceData.data());
     perMeshBuffer = createBufferWithData(app, sizeof(PerMeshData) * perMeshData.size(), vk::BufferUsageFlagBits::eStorageBuffer, VMA_MEMORY_USAGE_GPU_ONLY, perMeshData.data());
     materialBuffer = createBufferWithData(app, sizeof(Material) * materials.size(), vk::BufferUsageFlagBits::eStorageBuffer, VMA_MEMORY_USAGE_GPU_ONLY, materials.data());

@@ -17,7 +17,6 @@ struct material {
 };
 
 layout(binding=0) uniform UniformBufferObject {
-    mat4 model;
     mat4 view;
     mat4 proj;
 } ubo;
@@ -43,7 +42,7 @@ void main() {
     uint meshIndex = gl_DrawID;
     uint instanceIndex = gl_InstanceIndex;
     mat4 model = instanceData.data[meshIndex].model;
-    gl_Position = ubo.proj * ubo.view * ubo.model * model * vec4(inPosition, 1.0);
+    gl_Position = ubo.proj * ubo.view * model * vec4(inPosition, 1.0);
     fragColor = materialData.data[meshData.data[meshIndex].materialIndex].diffuse.xyz;
     debugPrintfEXT("Color: %f %f %f\n", fragColor.r, fragColor.g, fragColor.b);
 }
