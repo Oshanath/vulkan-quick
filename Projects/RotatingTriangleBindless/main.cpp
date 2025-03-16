@@ -126,7 +126,7 @@ public:
 
 int main() {
 
-    Triangle triangle(800, 600, "Triangle Renderer");
+    Triangle triangle(1920, 1080, "Triangle Renderer");
     triangle.run();
 
 }

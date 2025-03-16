@@ -44,6 +44,7 @@ Model::Model(Application& app, std::string path) {
         }
 
         mesh.indexCount = indices.size() - mesh.indexOffset;
+        mesh.materialIndex = aiMesh->mMaterialIndex;
         meshes.push_back(mesh);
     }
 
@@ -69,10 +70,21 @@ Model::Model(Application& app, std::string path) {
         }
     }
 
+    for (int i = 0; i < scene->mNumMaterials; i++) {
+        aiMaterial* material = scene->mMaterials[i];
+
+        aiColor3D diffuseColor(0.0f, 0.0f, 0.0f);
+        material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor);
+        Material mat;
+        mat.diffuse = {diffuseColor.r, diffuseColor.g, diffuseColor.b, 1.0f};
+        materials.push_back(mat);
+    }
+
     for (Mesh &mesh : meshes) {
         perInstanceData.insert(perInstanceData.end(), mesh.perInstanceData.begin(), mesh.perInstanceData.end());
         PerMeshData data;
         data.startInstance = perInstanceData.size() - mesh.perInstanceData.size();
+        data.materialIndex = mesh.materialIndex;
         perMeshData.push_back(data);
     }
 
@@ -90,4 +102,5 @@ Model::Model(Application& app, std::string path) {
 
     perInstanceBuffer = createBufferWithData(app, sizeof(PerInstanceData) * perInstanceData.size(), vk::BufferUsageFlagBits::eStorageBuffer, VMA_MEMORY_USAGE_GPU_ONLY, perInstanceData.data());
     perMeshBuffer = createBufferWithData(app, sizeof(PerMeshData) * perMeshData.size(), vk::BufferUsageFlagBits::eStorageBuffer, VMA_MEMORY_USAGE_GPU_ONLY, perMeshData.data());
+    materialBuffer = createBufferWithData(app, sizeof(Material) * materials.size(), vk::BufferUsageFlagBits::eStorageBuffer, VMA_MEMORY_USAGE_GPU_ONLY, materials.data());
 }

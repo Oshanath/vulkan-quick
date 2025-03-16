@@ -38,11 +38,12 @@ public:
     Image texture = createImageFromFile(*this, "Resources/texture.jpg");
     vk::Sampler sampler = device.createSampler(vk::SamplerCreateInfo({}, vk::Filter::eLinear, vk::Filter::eLinear, vk::SamplerMipmapMode::eLinear, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, vk::SamplerAddressMode::eRepeat, 0.0f, VK_TRUE, vkbPhysicalDevice.properties.limits.maxSamplerAnisotropy, VK_FALSE, vk::CompareOp::eAlways, 0.0f, 0.0f, vk::BorderColor::eIntOpaqueBlack, VK_FALSE));
 
-    std::array<vk::DescriptorSetLayoutBinding, 4> bindings = {
+    std::array<vk::DescriptorSetLayoutBinding, 5> bindings = {
         vk::DescriptorSetLayoutBinding(0, vk::DescriptorType::eUniformBufferDynamic, 1, vk::ShaderStageFlagBits::eAll),
         vk::DescriptorSetLayoutBinding(1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment),
         vk::DescriptorSetLayoutBinding(2, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eVertex), // Per mesh data
-        vk::DescriptorSetLayoutBinding(3, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eVertex) // Per instance data
+        vk::DescriptorSetLayoutBinding(3, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eVertex), // Per instance data
+        vk::DescriptorSetLayoutBinding(4, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eVertex) // Materials
     };
     vk::DescriptorSetLayout descriptorSetLayout = device.createDescriptorSetLayout(vk::DescriptorSetLayoutCreateInfo({vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool}, bindings.size(), bindings.data(), nullptr));
     vk::DescriptorSet descriptorSet = device.allocateDescriptorSets(vk::DescriptorSetAllocateInfo(descriptorPool, 1, &descriptorSetLayout))[0];
@@ -59,12 +60,14 @@ public:
         vk::DescriptorImageInfo imageInfo(sampler, texture.imageView, vk::ImageLayout::eShaderReadOnlyOptimal);
         vk::DescriptorBufferInfo perMeshBufferInfo(trashGod.perMeshBuffer.buffer, 0, sizeof(PerMeshData) * trashGod.perMeshData.size());
         vk::DescriptorBufferInfo perInstanceBufferInfo(trashGod.perInstanceBuffer.buffer, 0, sizeof(PerInstanceData) * trashGod.perInstanceData.size());
+        vk::DescriptorBufferInfo materialBufferInfo(trashGod.materialBuffer.buffer, 0, sizeof(Material) * trashGod.materials.size());
 
-        std::array<vk::WriteDescriptorSet, 4> descriptorWrites = {
+        std::array descriptorWrites = {
             vk::WriteDescriptorSet(descriptorSet, 0, 0, 1, vk::DescriptorType::eUniformBufferDynamic, nullptr, &bufferInfo),
             vk::WriteDescriptorSet(descriptorSet, 1, 0, 1, vk::DescriptorType::eCombinedImageSampler, &imageInfo),
             vk::WriteDescriptorSet(descriptorSet, 2, 0, 1, vk::DescriptorType::eStorageBuffer, nullptr, &perMeshBufferInfo),
-            vk::WriteDescriptorSet(descriptorSet, 3, 0, 1, vk::DescriptorType::eStorageBuffer, nullptr, &perInstanceBufferInfo)
+            vk::WriteDescriptorSet(descriptorSet, 3, 0, 1, vk::DescriptorType::eStorageBuffer, nullptr, &perInstanceBufferInfo),
+            vk::WriteDescriptorSet(descriptorSet, 4, 0, 1, vk::DescriptorType::eStorageBuffer, nullptr, &materialBufferInfo)
         };
         device.updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 
@@ -106,14 +109,14 @@ public:
         commandBuffer.setViewport(0, {vk::Viewport(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height), 0.0f, 1.0f)});
         commandBuffer.setScissor(0, {vk::Rect2D({0, 0}, {static_cast<uint32_t>(width), static_cast<uint32_t>(height)})});
         commandBuffer.bindVertexBuffers(0, {vertexBuffer.buffer}, {0});
-        commandBuffer.bindIndexBuffer(indexBuffer.buffer, 0, vk::IndexType::eUint16);
+        commandBuffer.bindIndexBuffer(indexBuffer.buffer, 0, vk::IndexType::eUint32);
         commandBuffer.drawIndexedIndirect(trashGod.indirectCommandsBuffer.buffer, 0, static_cast<uint32_t>(trashGod.meshes.size()), sizeof(vk::DrawIndexedIndirectCommand));
     }
 };
 
 int main() {
 
-    Triangle triangle(800, 600, "Triangle Renderer");
+    Triangle triangle(1920, 1080, "Triangle Renderer");
     triangle.run();
 
 }

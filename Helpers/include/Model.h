@@ -34,6 +34,11 @@ struct PerInstanceData {
 
 struct PerMeshData {
     uint32_t startInstance;
+    uint32_t materialIndex;
+};
+
+struct Material {
+    glm::vec4 diffuse;
 };
 
 class Mesh {
@@ -41,6 +46,7 @@ public:
     uint32_t vertexOffset;
     uint32_t indexOffset;
     uint32_t indexCount;
+    uint32_t materialIndex;
     std::vector<PerInstanceData> perInstanceData;
 
     Mesh(){}
@@ -53,9 +59,11 @@ public:
     std::vector<Mesh> meshes;
     std::vector<PerInstanceData> perInstanceData;
     std::vector<PerMeshData> perMeshData;
+    std::vector<Material> materials;
     Buffer indirectCommandsBuffer;
     Buffer perInstanceBuffer;
     Buffer perMeshBuffer;
+    Buffer materialBuffer;
 
     Model(){}
     Model(Application& app, std::string path);
