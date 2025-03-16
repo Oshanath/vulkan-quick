@@ -71,6 +71,4 @@ public:
     vk::Queue getGraphicsQueue();
 };
 
-
-
 #endif //APPLICATION_H

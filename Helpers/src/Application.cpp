@@ -6,6 +6,7 @@
 
 #define VMA_IMPLEMENTATION
 #include <vma/vk_mem_alloc.h>
+#include <vulkan/vulkan_win32.h>
 
 Application::Application(int width, int height, std::string title):
     width(width), height(height), depthFormat(vk::Format::eD32Sfloat)
@@ -60,9 +61,11 @@ vkb::PhysicalDevice Application::selectPhysicalDevice() {
     descriptorIndexingFeatures.shaderStorageBufferArrayNonUniformIndexing = VK_TRUE;
     descriptorIndexingFeatures.descriptorBindingStorageBufferUpdateAfterBind = VK_TRUE;
     descriptorIndexingFeatures.descriptorBindingPartiallyBound = VK_TRUE;
+    descriptorIndexingFeatures.runtimeDescriptorArray = VK_TRUE;
 
     vk::PhysicalDeviceFeatures features{};
     features.samplerAnisotropy = VK_TRUE;
+    features.multiDrawIndirect = VK_TRUE;
 
     vkb::PhysicalDeviceSelector physicalDeviceSelector({ vkbInstance });
     auto phys_ret = physicalDeviceSelector.set_surface(surface)
@@ -70,6 +73,7 @@ vkb::PhysicalDevice Application::selectPhysicalDevice() {
         .add_required_extension(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME) // only strictly needed on Vulkan 1.1
         .add_required_extension_features(descriptorIndexingFeatures)
         .set_required_features(features)
+        .add_required_extension(VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME)
         .set_minimum_version(1, 1) // require a vulkan 1.1 capable device
         .require_dedicated_transfer_queue()
         .select();
@@ -80,6 +84,7 @@ vkb::PhysicalDevice Application::selectPhysicalDevice() {
 }
 
 vkb::Device Application::createDevice() {
+
     auto device_builder = vkb::DeviceBuilder{ vkbPhysicalDevice };
     auto dev_ret = device_builder.build();
     if (!dev_ret) {

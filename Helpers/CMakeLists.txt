@@ -8,8 +8,8 @@ add_library(Helpers
     src/Buffer.cpp
     src/Image.cpp
     src/Application.cpp
-        src/Camera.cpp
-        include/Camera.h
+    src/Camera.cpp
+    src/Model.cpp
 )
 
 target_link_libraries(Helpers
@@ -18,6 +18,7 @@ target_link_libraries(Helpers
     glm
     vk-bootstrap
     glfw
+    assimp
 )
 target_include_directories(Helpers PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
