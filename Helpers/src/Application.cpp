@@ -74,6 +74,7 @@ vkb::PhysicalDevice Application::selectPhysicalDevice() {
         .add_required_extension_features(descriptorIndexingFeatures)
         .set_required_features(features)
         .add_required_extension(VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME)
+        .add_required_extension(VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME)
         .set_minimum_version(1, 1) // require a vulkan 1.1 capable device
         .require_dedicated_transfer_queue()
         .select();

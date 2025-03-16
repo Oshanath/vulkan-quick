@@ -13,7 +13,7 @@ public:
     glm::vec3 direction;
     glm::vec3 up{0.0f, 1.0f, 0.0f};
 
-    float speed = 0.001f;
+    float speed = 1.0f;
     float sensitivity = 0.001f;
 
     bool moveForward = false;

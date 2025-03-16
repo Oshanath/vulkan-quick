@@ -58,7 +58,7 @@ Model::Model(Application& app, std::string path) {
 
         for (int i = 0; i < node->mNumChildren; i++) {
             aiNode* child = node->mChildren[i];
-            glm::mat4 transform = convertAssimpMat4ToGlm(child->mTransformation) * parentTransform;
+            glm::mat4 transform = parentTransform * convertAssimpMat4ToGlm(child->mTransformation);
             nodes.push({child, transform});
         }
 

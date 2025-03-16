@@ -93,9 +93,9 @@ public:
         float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
         UniformBufferObject ubo{
-            .model = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+            .model = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)),
             .view = camera.getViewMatrix(),
-            .proj = glm::perspective(glm::radians(45.0f), width / (float) height, 0.1f, 10.0f)
+            .proj = glm::perspective(glm::radians(45.0f), width / (float) height, 0.1f, 100000.0f)
         };
         ubo.proj[1][1] *= -1;
         uniformBuffer.copyData(vmaAllocator, &ubo, sizeof(ubo), currentFrame * alignedUBOSize);
@@ -107,7 +107,6 @@ public:
         commandBuffer.setScissor(0, {vk::Rect2D({0, 0}, {static_cast<uint32_t>(width), static_cast<uint32_t>(height)})});
         commandBuffer.bindVertexBuffers(0, {vertexBuffer.buffer}, {0});
         commandBuffer.bindIndexBuffer(indexBuffer.buffer, 0, vk::IndexType::eUint16);
-        // commandBuffer.drawIndexed(static_cast<uint32_t>(trashGod.indices.size()), 1, 0, 0, 0);
         commandBuffer.drawIndexedIndirect(trashGod.indirectCommandsBuffer.buffer, 0, static_cast<uint32_t>(trashGod.meshes.size()), sizeof(vk::DrawIndexedIndirectCommand));
     }
 };
