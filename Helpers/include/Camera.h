@@ -6,6 +6,7 @@
 #define CAMERA_H
 #include "glm/ext/matrix_transform.hpp"
 
+#include <iostream>
 
 class Camera {
 public:
@@ -33,6 +34,10 @@ public:
     Camera(){}
     Camera(glm::vec3 position, glm::vec3 direction);
     void move();
+    void print() {
+        std::cout << "Position: " << position.x << ", " << position.y << ", " << position.z << std::endl;
+        std::cout << "Direction: " << direction.x << ", " << direction.y << ", " << direction.z << std::endl;
+    }
 
     [[nodiscard]] glm::mat4 getViewMatrix() const {
         return glm::lookAt(position, position + direction, glm::vec3(0.0f, 0.0f, 1.0f));

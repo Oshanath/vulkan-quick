@@ -70,6 +70,25 @@ static glm::mat4 convertAssimpMat4ToGlm(const aiMatrix4x4 &m) {
     return glm::transpose(glm::make_mat4(&m.a1));
 }
 
+enum LightSourceType {
+    DIRECTIONAL_LIGHT = 0,
+    POINT_LIGHT = 1,
+    SPOT_LIGHT = 2
+};
+
+class LightSource {
+public:
+    glm::vec3 color;
+    float intensity;
+    glm::vec3 position;
+    uint32_t type;
+    glm::vec3 direction;
+    float padding;
+
+    LightSource(glm::vec3 color, float intensity, glm::vec3 position, glm::vec3 direction, uint32_t type) :
+        color(color), intensity(intensity), position(position), direction(direction), type(type) {}
+};
+
 class Scene {
 public:
     std::vector<Model> models;
@@ -79,11 +98,13 @@ public:
     std::vector<PerInstanceData> perInstanceData;
     std::vector<PerMeshData> perMeshData;
     uint32_t meshCount = 0;
+    std::vector<LightSource> lightSources;
 
     Buffer indirectCommandsBuffer;
     Buffer perInstanceBuffer;
     Buffer perMeshBuffer;
     Buffer materialBuffer;
+    Buffer lightSourcesBuffer;
 
     Model* addModel(Application& app, std::string path, float scaling = 1.0f, glm::mat4 rotation = glm::mat4(1.0f), glm::vec3 translation = glm::vec3(0.0f));
     void generateBuffers(Application& app);

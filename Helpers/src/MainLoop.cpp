@@ -36,6 +36,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         camera->moveDown = true;
     if (key == GLFW_KEY_LEFT_CONTROL && action == GLFW_RELEASE)
         camera->moveDown = false;
+
+    if (key == GLFW_KEY_P) {
+        camera->print();
+    }
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
