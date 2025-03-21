@@ -39,7 +39,10 @@ struct PerMeshData {
 };
 
 struct Material {
-    glm::vec4 diffuse;
+    glm::vec3 albedo;
+    float metallic;
+    glm::vec3 emissive;
+    float roughness;
 };
 
 class Mesh {

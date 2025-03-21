@@ -54,7 +54,7 @@ public:
         uniformBuffer(*this, uniformBufferSize, vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU)
     {
         trashGod = scene.addModel(*this, "Resources/trashGod/scene.fbx", 1.0f, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
-        trashGod2 = scene.addModel(*this, "Resources/trashGod/scene.fbx", 1.0f, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::vec3(0.0f, 0.0f, 5000.0f));
+        // trashGod2 = scene.addModel(*this, "Resources/trashGod/scene.fbx", 1.0f, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::vec3(0.0f, 0.0f, 5000.0f));
         scene.generateBuffers(*this);
         vertexBuffer = createBufferWithData(*this, sizeof(Vertex) * scene.vertices.size(), vk::BufferUsageFlagBits::eVertexBuffer, VMA_MEMORY_USAGE_GPU_ONLY, (void*)scene.vertices.data());
         indexBuffer = createBufferWithData(*this, sizeof(uint32_t) * scene.indices.size(), vk::BufferUsageFlagBits::eIndexBuffer, VMA_MEMORY_USAGE_GPU_ONLY, (void*)scene.indices.data());

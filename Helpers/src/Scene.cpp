@@ -77,11 +77,24 @@ Model* Scene::addModel(Application& app, std::string path, float scaling, glm::m
 
     for (int i = 0; i < scene->mNumMaterials; i++) {
         aiMaterial* material = scene->mMaterials[i];
-
-        aiColor3D diffuseColor(0.0f, 0.0f, 0.0f);
-        material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor);
         Material mat;
-        mat.diffuse = {diffuseColor.r, diffuseColor.g, diffuseColor.b, 1.0f};
+
+        aiColor3D diffuse;
+        material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse);
+        mat.albedo = glm::vec3(diffuse.r, diffuse.g, diffuse.b);
+
+        aiColor3D emissive;
+        material->Get(AI_MATKEY_COLOR_EMISSIVE, emissive);
+        mat.emissive = glm::vec3(emissive.r, emissive.g, emissive.b);
+
+        aiColor3D metallic;
+        material->Get(AI_MATKEY_METALLIC_FACTOR, metallic);
+        mat.metallic = metallic.r;
+
+        aiColor3D roughness;
+        material->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness);
+        mat.roughness = roughness.r;
+
         materials.push_back(mat);
     }
 

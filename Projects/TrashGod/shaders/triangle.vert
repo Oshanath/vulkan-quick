@@ -13,7 +13,10 @@ struct perInstanceData {
 };
 
 struct material {
-    vec4 diffuse;
+    vec3 albedo;
+    float metallic;
+    vec3 emissive;
+    float roughness;
 };
 
 layout(binding=0) uniform UniformBufferObject {
@@ -43,6 +46,8 @@ void main() {
     uint instanceIndex = gl_InstanceIndex;
     mat4 model = instanceData.data[meshIndex].model;
     gl_Position = ubo.proj * ubo.view * model * vec4(inPosition, 1.0);
-    fragColor = materialData.data[meshData.data[meshIndex].materialIndex].diffuse.xyz;
-    debugPrintfEXT("Color: %f %f %f\n", fragColor.r, fragColor.g, fragColor.b);
+
+    vec3 albedo = materialData.data[meshData.data[meshIndex].materialIndex].albedo;
+    vec3 emissive = materialData.data[meshData.data[meshIndex].materialIndex].emissive;
+    fragColor = albedo + emissive;;
 }
