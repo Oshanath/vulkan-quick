@@ -19,6 +19,7 @@
 struct UniformBufferObject {
     glm::mat4 view;
     glm::mat4 proj;
+    glm::vec4 cameraPos;
 };
 
 class Triangle : public MainLoop{
@@ -44,7 +45,7 @@ public:
         vk::DescriptorSetLayoutBinding(1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment),
         vk::DescriptorSetLayoutBinding(2, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eVertex), // Per mesh data
         vk::DescriptorSetLayoutBinding(3, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eVertex), // Per instance data
-        vk::DescriptorSetLayoutBinding(4, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eVertex), // Materials
+        vk::DescriptorSetLayoutBinding(4, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment), // Materials
         vk::DescriptorSetLayoutBinding(5, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eFragment) // Light sources
     };
     vk::DescriptorSetLayout descriptorSetLayout = device.createDescriptorSetLayout(vk::DescriptorSetLayoutCreateInfo({vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool}, bindings.size(), bindings.data(), nullptr));
@@ -103,7 +104,8 @@ public:
 
         UniformBufferObject ubo{
             .view = camera.getViewMatrix(),
-            .proj = glm::perspective(glm::radians(45.0f), width / (float) height, 10.0f, 100000.0f)
+            .proj = glm::perspective(glm::radians(45.0f), width / (float) height, 10.0f, 100000.0f),
+            .cameraPos = glm::vec4(camera.position, 1.0f)
         };
         ubo.proj[1][1] *= -1;
         uniformBuffer.copyData(vmaAllocator, &ubo, sizeof(ubo), currentFrame * alignedUBOSize);
