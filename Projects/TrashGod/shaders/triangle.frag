@@ -150,6 +150,7 @@ void main() {
         finalColor += color;
     }
 
+    finalColor = finalColor / (finalColor + vec3(1.0));
     outColor = vec4(finalColor, 1.0);
 
 }
