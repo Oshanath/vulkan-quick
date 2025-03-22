@@ -6,6 +6,12 @@
 
 #include "MainLoop.h"
 
+#ifdef _DEBUG
+#define APP_USE_VULKAN_DEBUG_REPORT
+#endif
+
+static ImGui_ImplVulkanH_Window g_MainWindowData;
+
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
@@ -92,6 +98,28 @@ MainLoop::MainLoop(int width, int height, std::string title):
     glfwSetKeyCallback(window, key_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_position_callback);
+
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForVulkan(window, true);
+
+    ImGui_ImplVulkan_InitInfo init_info = {};
+    init_info.Instance       = vkbInstance.instance;
+    init_info.PhysicalDevice = vkbPhysicalDevice.physical_device;
+    init_info.Device         = device;
+    init_info.QueueFamily    = vkbDevice.get_queue_index(vkb::QueueType::graphics).value();
+    init_info.Queue          = graphicsQueue;
+    init_info.PipelineCache  = VK_NULL_HANDLE;
+    init_info.DescriptorPool = descriptorPool;
+    init_info.Allocator      = nullptr;
+    init_info.MinImageCount  = vkbSwapchain.image_count;
+    init_info.ImageCount     = vkbSwapchain.image_count;
+    init_info.CheckVkResultFn = nullptr;
+    init_info.RenderPass = renderPass.renderPass;
+    init_info.Subpass = 0;
+
+    ImGui_ImplVulkan_Init(&init_info);
 }
 
 void MainLoop::run() {
@@ -100,6 +128,11 @@ void MainLoop::run() {
         glfwPollEvents();
 
         camera.move();
+
+        ImGui_ImplVulkan_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        renderUI();
 
         // Draw frame
         device.waitForFences(1, &inFlightFences[currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
@@ -111,6 +144,9 @@ void MainLoop::run() {
         renderPass.beginRenderPass(swapchainFramebuffers[imageIndex], vk::Extent2D(width, height), commandBuffers[currentFrame]);
 
         render(commandBuffers[currentFrame], currentFrame);
+
+        ImGui::Render();
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffers[currentFrame]);
 
         commandBuffers[currentFrame].endRenderPass();
         commandBuffers[currentFrame].end();

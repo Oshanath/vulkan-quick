@@ -24,6 +24,11 @@ struct material {
     float roughness;
 };
 
+layout( push_constant ) uniform constants
+{
+    float ambientFactor;
+} PushConstants;
+
 layout(binding=0) uniform UniformBufferObject {
     mat4 view;
     mat4 proj;
@@ -110,7 +115,7 @@ void main() {
     vec3  wi          = calculateWi(0);
     float cosTheta    = max(dot(N, wi), 0.0);
 
-    vec3 albedo = materialData.data[materialIndex].albedo;
+    vec3 albedo = materialData.data[materialIndex].albedo + materialData.data[materialIndex].emissive;
     float metallic = materialData.data[materialIndex].metallic;
     float roughness = materialData.data[materialIndex].roughness;
     vec3 emissive = materialData.data[materialIndex].emissive;
@@ -145,7 +150,7 @@ void main() {
         float NdotL = max(dot(N, L), 0.0);
         Lo += (kD * albedo / PI + specular) * radiance * NdotL;
 
-        vec3 ambient = vec3(0.03) * albedo;
+        vec3 ambient = vec3(PushConstants.ambientFactor) * albedo;
         vec3 color   = ambient + Lo;
         finalColor += color;
     }

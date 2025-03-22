@@ -9,8 +9,15 @@ add_library(Helpers
     src/Image.cpp
     src/Application.cpp
     src/Camera.cpp
-        src/Scene.cpp
-        include/Scene.h
+    src/Scene.cpp
+
+    ${PROJECT_SOURCE_DIR}/external/imgui/imgui.cpp
+    ${PROJECT_SOURCE_DIR}/external/imgui/imgui_demo.cpp
+    ${PROJECT_SOURCE_DIR}/external/imgui/imgui_draw.cpp
+    ${PROJECT_SOURCE_DIR}/external/imgui/imgui_widgets.cpp
+    ${PROJECT_SOURCE_DIR}/external/imgui/imgui_tables.cpp
+    ${PROJECT_SOURCE_DIR}/external/imgui/backends/imgui_impl_glfw.cpp
+    ${PROJECT_SOURCE_DIR}/external/imgui/backends/imgui_impl_vulkan.cpp
 )
 
 target_link_libraries(Helpers
@@ -23,4 +30,6 @@ target_link_libraries(Helpers
 )
 target_include_directories(Helpers PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${PROJECT_SOURCE_DIR}/external/imgui
+        ${PROJECT_SOURCE_DIR}/external/imgui/backends
 )

@@ -115,9 +115,19 @@ VmaAllocator Application::createVmaAllocator() {
 }
 
 vk::DescriptorPool Application::createDescriptorPool() {
-    vk::DescriptorPoolSize uniformBufferPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1000);
-    vk::DescriptorPoolSize samplerPoolSize(vk::DescriptorType::eCombinedImageSampler, 1000);
-    std::vector poolSizes = {uniformBufferPoolSize, samplerPoolSize};
+    std::vector poolSizes = {
+        vk::DescriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1000),
+        vk::DescriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1000),
+        vk::DescriptorPoolSize(vk::DescriptorType::eSampler, 1000),
+        vk::DescriptorPoolSize(vk::DescriptorType::eSampledImage, 1000),
+        vk::DescriptorPoolSize(vk::DescriptorType::eStorageImage, 1000),
+        vk::DescriptorPoolSize(vk::DescriptorType::eUniformTexelBuffer, 1000),
+        vk::DescriptorPoolSize(vk::DescriptorType::eStorageTexelBuffer, 1000),
+        vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, 1000),
+        vk::DescriptorPoolSize(vk::DescriptorType::eStorageBuffer, 1000),
+        vk::DescriptorPoolSize(vk::DescriptorType::eStorageBufferDynamic, 1000),
+        vk::DescriptorPoolSize(vk::DescriptorType::eInputAttachment, 1000)
+    };
 
     vk::DescriptorPoolCreateInfo poolInfo({vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind}, MAX_FRAMES_IN_FLIGHT, 1, poolSizes.data());
     return device.createDescriptorPool(poolInfo);

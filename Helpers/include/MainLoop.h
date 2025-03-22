@@ -21,6 +21,10 @@
 #include "Camera.h"
 #include "VkBootstrap.h"
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_vulkan.h"
+
 class MainLoop : public Application{
 public:
     vkb::Swapchain vkbSwapchain;
@@ -40,6 +44,7 @@ public:
     MainLoop(int width, int height, std::string title);
     void run();
     virtual void render(vk::CommandBuffer& commandBuffer, int currentFrame) = 0;
+    virtual void renderUI() = 0;
 
     vkb::Swapchain createSwapchain();
     RenderPass createRenderPass();

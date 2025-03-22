@@ -22,10 +22,17 @@ struct UniformBufferObject {
     glm::vec4 cameraPos;
 };
 
+struct PushConstants {
+    float ambientFactor;
+};
+
 class Triangle : public MainLoop{
 public:
 
     GraphicsPipeline graphicsPipeline = GraphicsPipeline(device, renderPass, width, height);
+    PushConstants pushConstants {
+        .ambientFactor = 0.09f
+    };
 
     Buffer vertexBuffer;
     Buffer indexBuffer;
@@ -78,6 +85,8 @@ public:
         };
         device.updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 
+        vk::PushConstantRange pushConstants = vk::PushConstantRange(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, sizeof(PushConstants));
+
         Shader vertexShader("./shaders/triangle.vert.spv", device);
         Shader fragmentShader("./shaders/triangle.frag.spv", device);
 
@@ -90,7 +99,7 @@ public:
         graphicsPipeline.vertexInputStateCreateInfo.pVertexBindingDescriptions = &bindingDescription;
         graphicsPipeline.vertexInputStateCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
         graphicsPipeline.vertexInputStateCreateInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
-        graphicsPipeline.pipelineLayoutCreateInfo = vk::PipelineLayoutCreateInfo({}, 1, &descriptorSetLayout, 0, nullptr);
+        graphicsPipeline.pipelineLayoutCreateInfo = vk::PipelineLayoutCreateInfo({}, 1, &descriptorSetLayout, 1, &pushConstants);
         graphicsPipeline.createLayoutAndPipeline(device);
     }
 
@@ -113,11 +122,17 @@ public:
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline.graphicsPipeline);
         uint32_t dynamicOffset = currentFrame * static_cast<uint32_t>(alignedUBOSize);
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, graphicsPipeline.pipelineLayout, 0, 1, &descriptorSet, 1, &dynamicOffset);
+        commandBuffer.pushConstants<PushConstants>(graphicsPipeline.pipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, pushConstants);
         commandBuffer.setViewport(0, {vk::Viewport(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height), 0.0f, 1.0f)});
         commandBuffer.setScissor(0, {vk::Rect2D({0, 0}, {static_cast<uint32_t>(width), static_cast<uint32_t>(height)})});
         commandBuffer.bindVertexBuffers(0, {vertexBuffer.buffer}, {0});
         commandBuffer.bindIndexBuffer(indexBuffer.buffer, 0, vk::IndexType::eUint32);
         commandBuffer.drawIndexedIndirect(scene.indirectCommandsBuffer.buffer, 0, scene.meshCount, sizeof(vk::DrawIndexedIndirectCommand));
+    }
+
+    void renderUI() override {
+        ImGui::Text("Controls\n");
+        ImGui::SliderFloat("Ambient Factor",  &pushConstants.ambientFactor, 0.0f, 0.25f);
     }
 };
 
