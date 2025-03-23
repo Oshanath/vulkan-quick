@@ -12,9 +12,6 @@
 class ShadowMap {
 
 public:
-    struct PushConstants {
-        glm::mat4 viewProj;
-    };
 
     uint32_t width;
 

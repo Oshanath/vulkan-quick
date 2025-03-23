@@ -32,11 +32,12 @@ layout( push_constant ) uniform constants
 layout(binding=0) uniform UniformBufferObject {
     mat4 view;
     mat4 proj;
+    mat4 lightViewProj;
     vec4 cameraPos;
 } ubo;
 
 layout(location = 0) in vec3 fragNormal;
-layout(location = 1) in vec3 fragPos;
+layout(location = 1) in vec4 fragPos;
 layout(location = 2) flat in uint materialIndex;
 
 layout(location = 0) out vec4 outColor;
@@ -48,6 +49,8 @@ layout(binding=3) readonly buffer MaterialSSBO {
 layout(binding = 4) readonly buffer LightSources {
     lightSource lightSources[];
 };
+
+layout(binding = 5) uniform sampler2D shadowMap;
 
 float calculateAttenuation(vec3 fragPos, vec3 lightPosition, uint lightSourceIndex) {
     if (lightSources[lightSourceIndex].type == DIRECTIONAL_LIGHT) {
@@ -62,7 +65,7 @@ vec3 calculateWi(uint lightSourceIndex) {
     if (lightSources[lightSourceIndex].type == DIRECTIONAL_LIGHT) {
         return normalize(-lightSources[lightSourceIndex].direction);
     } else {
-        return normalize(lightSources[lightSourceIndex].position - fragPos);
+        return normalize(lightSources[lightSourceIndex].position - vec3(fragPos));
     }
 }
 
@@ -104,10 +107,20 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
     return ggx1 * ggx2;
 }
 
+float ShadowCalculation(uint lightSourceIndex) {
+    vec4 fragPosLightSpace = ubo.lightViewProj * fragPos;
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
+    float closestDepth = texture(shadowMap, projCoords.xy).r;
+    float currentDepth = projCoords.z;
+    debugPrintfEXT("Current depth: %f, Closest depth: %f\n", currentDepth, closestDepth);
+    return currentDepth > closestDepth  ? 1.0 : 0.0;
+}
+
 void main() {
 
     vec3 N = normalize(fragNormal);
-    vec3 V = normalize(ubo.cameraPos.xyz - fragPos);
+    vec3 V = normalize(ubo.cameraPos.xyz - vec3(fragPos));
 
     vec3  lightColor  = lightSources[0].color;
     vec3  wi          = calculateWi(0);
@@ -122,11 +135,11 @@ void main() {
 
     vec3 Lo = vec3(0.0);
     for (int i = 0; i < 1; i++) {
-        vec3 L = normalize(lightSources[i].position - fragPos);
+        vec3 L = normalize(lightSources[i].position - vec3(fragPos));
         vec3 H = normalize(V + L);
 
-        float distance = length(lightSources[i].position - fragPos);
-        float attenuation = calculateAttenuation(fragPos, lightSources[i].position, 0);
+        float distance = length(lightSources[i].position - vec3(fragPos));
+        float attenuation = calculateAttenuation(vec3(fragPos), lightSources[i].position, 0);
         vec3  radiance    = lightColor * attenuation * cosTheta;
 
         vec3 F0 = vec3(0.04);
@@ -149,7 +162,8 @@ void main() {
         Lo += (kD * albedo / PI + specular) * radiance * NdotL;
 
         vec3 ambient = vec3(PushConstants.ambientFactor) * albedo;
-        vec3 color   = ambient + Lo;
+        float shadow = ShadowCalculation(i);
+        vec3 color   = ambient + (1.0 - shadow) * Lo;
         finalColor += color;
     }
 

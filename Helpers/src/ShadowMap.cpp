@@ -34,12 +34,11 @@ ShadowMap::ShadowMap(Application& app, uint32_t width, Buffer& uniformBuffer, si
 
     graphicsPipeline = GraphicsPipeline(app.device, renderPass, width, width);
     prepareDescriptorSets(app, uniformBuffer, alignedUBOSize, scene);
-    pushConstantRange = vk::PushConstantRange(vk::ShaderStageFlagBits::eVertex, 0, sizeof(PushConstants));
     Shader vertexShader("./shaders/shadow.vert.spv", app.device);
     Shader fragmentShader("./shaders/shadow.frag.spv", app.device);
     graphicsPipeline.setVertexShader(vertexShader);
     graphicsPipeline.setFragmentShader(fragmentShader);
-    graphicsPipeline.createLayoutAndPipeline(app.device, std::vector{descriptorSetLayout}, std::vector{pushConstantRange});
+    graphicsPipeline.createLayoutAndPipeline(app.device, std::vector{descriptorSetLayout}, std::vector<vk::PushConstantRange>{});
 }
 
 void ShadowMap::beginRenderPass(vk::CommandBuffer& commandBuffer) {

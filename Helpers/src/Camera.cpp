@@ -12,23 +12,27 @@ Camera::Camera(glm::vec3 position, glm::vec3 direction):
 }
 
 void Camera::move() {
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    float deltaTime = std::chrono::duration<float, std::milli>(currentTime - lastTime).count();
+    lastTime = currentTime;
+
     if (moveForward) {
-        position += speed * direction;
+        position += speed * deltaTime * direction;
     }
     if (moveBackward) {
-        position -= speed * direction;
+        position -= speed * deltaTime * direction;
     }
     if (moveLeft) {
-        position -= speed * glm::normalize(glm::cross(direction, glm::vec3(0.0f, 0.0f, 1.0f)));
+        position -= speed * deltaTime * glm::normalize(glm::cross(direction, glm::vec3(0.0f, 0.0f, 1.0f)));
     }
     if (moveRight) {
-        position += speed * glm::normalize(glm::cross(direction, glm::vec3(0.0f, 0.0f, 1.0f)));
+        position += speed * deltaTime * glm::normalize(glm::cross(direction, glm::vec3(0.0f, 0.0f, 1.0f)));
     }
     if (moveUp) {
-        position += speed * glm::vec3(0.0f, 0.0f, 1.0f);
+        position += speed * deltaTime * glm::vec3(0.0f, 0.0f, 1.0f);
     }
     if (moveDown) {
-        position -= speed * glm::vec3(0.0f, 0.0f, 1.0f);
+        position -= speed * deltaTime * glm::vec3(0.0f, 0.0f, 1.0f);
     }
 
     if (looking) {
