@@ -87,7 +87,7 @@ MainLoop::MainLoop(int width, int height, std::string title):
     vkbSwapchain = createSwapchain();
     swapchain = vkbSwapchain.swapchain;
     renderPass = createRenderPass();
-    depthImage = createDepthImage(*this);
+    depthImage = createDepthImage(*this, width, height);
     swapchainFramebuffers = createSwapchainFramebuffers();
     commandBuffers = allocateCommandBuffers();
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
@@ -141,14 +141,7 @@ void MainLoop::run() {
 
         commandBuffers[currentFrame].reset();
         commandBuffers[currentFrame].begin(vk::CommandBufferBeginInfo({}));
-        renderPass.beginRenderPass(swapchainFramebuffers[imageIndex], vk::Extent2D(width, height), commandBuffers[currentFrame]);
-
         render(commandBuffers[currentFrame], currentFrame);
-
-        ImGui::Render();
-        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffers[currentFrame]);
-
-        commandBuffers[currentFrame].endRenderPass();
         commandBuffers[currentFrame].end();
 
         vk::PipelineStageFlags pipelineStageFlags(vk::PipelineStageFlagBits::eColorAttachmentOutput);

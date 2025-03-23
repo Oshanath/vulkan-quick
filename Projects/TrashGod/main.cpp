@@ -14,37 +14,41 @@
 
 #include "Buffer.h"
 #include "Scene.h"
+#include "ShadowMap.h"
 #include "vma/vk_mem_alloc.h"
 
-struct UniformBufferObject {
-    glm::mat4 view;
-    glm::mat4 proj;
-    glm::vec4 cameraPos;
-};
-
-struct PushConstants {
-    float ambientFactor;
-};
-
 class Triangle : public MainLoop{
+
+    struct UniformBufferObject {
+        glm::mat4 view;
+        glm::mat4 proj;
+        glm::vec4 cameraPos;
+    };
+
+    struct PushConstants {
+        float ambientFactor;
+    };
+
 public:
     size_t alignedUBOSize = getAlignedUBOSize(sizeof(UniformBufferObject));
     size_t uniformBufferSize = alignedUBOSize * MAX_FRAMES_IN_FLIGHT;
 
-    GraphicsPipeline graphicsPipeline = GraphicsPipeline(device, renderPass, width, height);
+    GraphicsPipeline graphicsPipeline = GraphicsPipeline(device, renderPass.renderPass, width, height);
     PushConstants pushConstants {.ambientFactor = 0.09f};
     Scene scene;
     std::shared_ptr<Model> trashGod;
     Buffer uniformBuffer;
     vk::DescriptorSetLayout descriptorSetLayout;
     vk::DescriptorSet descriptorSet;
+    ShadowMap shadowMap;
 
     Triangle(int width, int height, std::string title):
         MainLoop(width, height, title),
         uniformBuffer(*this, uniformBufferSize, vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU)
     {
         trashGod = scene.addModel(*this, "Resources/trashGod/scene.fbx", 1.0f, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
-        scene.lightSources.push_back(LightSource(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(1690.77f, 4482.58f, 6788.77f), glm::vec3(-0.703004, -0.437229, -0.560906), LightSourceType::DIRECTIONAL_LIGHT));
+        scene.lightSources.push_back(LightSource(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(1401.45, 3000.43, 4182.14), glm::vec3(-0.81861, -0.404965, -0.407285), LightSourceType::DIRECTIONAL_LIGHT));
+        // scene.lightSources.push_back(LightSource(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(-2270.03f, 2249.98f, 2652.1f), glm::vec3(-0.380248f, -0.83261f, -0.402705f), LightSourceType::DIRECTIONAL_LIGHT));
         scene.generateBuffers(*this);
 
         prepareDescriptorSets();
@@ -54,9 +58,12 @@ public:
         graphicsPipeline.setVertexShader(vertexShader);
         graphicsPipeline.setFragmentShader(fragmentShader);
         graphicsPipeline.createLayoutAndPipeline(device, std::vector{descriptorSetLayout}, std::vector{pushConstantRange});
+
+        shadowMap = ShadowMap(*this, 4096, uniformBuffer, alignedUBOSize, scene);
     }
 
     void render(vk::CommandBuffer& commandBuffer, int currentFrame) override {
+
         UniformBufferObject ubo{
             .view = camera.getViewMatrix(),
             .proj = glm::perspective(glm::radians(45.0f), width / (float) height, 10.0f, 100000.0f),
@@ -65,15 +72,34 @@ public:
         ubo.proj[1][1] *= -1;
         uniformBuffer.copyData(vmaAllocator, &ubo, sizeof(ubo), currentFrame * alignedUBOSize);
 
+        ShadowMap::PushConstants shadowMapPushConstants{
+            .viewProj = glm::ortho(-6000.0f, 6000.0f, -6000.0f, 6000.0f, 10.0f, 10000.0f) * glm::lookAt(scene.lightSources[0].position, scene.lightSources[0].position + scene.lightSources[0].direction, glm::vec3(0.0f, 1.0f, 0.0f))
+        };
+        shadowMap.beginRenderPass(commandBuffer);
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, shadowMap.graphicsPipeline.graphicsPipeline);
+        uint32_t dynamicOffset1 = currentFrame * static_cast<uint32_t>(alignedUBOSize);
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, shadowMap.graphicsPipeline.pipelineLayout, 0, 1, &shadowMap.descriptorSet, 1, &dynamicOffset1);
+        commandBuffer.pushConstants<ShadowMap::PushConstants>(shadowMap.graphicsPipeline.pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, shadowMapPushConstants);
+        commandBuffer.setViewport(0, {vk::Viewport(0.0f, 0.0f, static_cast<float>(shadowMap.width), static_cast<float>(shadowMap.width), 0.0f, 1.0f)});
+        commandBuffer.setScissor(0, {vk::Rect2D({0, 0}, {static_cast<uint32_t>(shadowMap.width), static_cast<uint32_t>(shadowMap.width)})});
+        commandBuffer.bindVertexBuffers(0, {scene.vertexBuffer.buffer}, {0});
+        commandBuffer.bindIndexBuffer(scene.indexBuffer.buffer, 0, vk::IndexType::eUint32);
+        commandBuffer.drawIndexedIndirect(scene.indirectCommandsBuffer.buffer, 0, scene.meshCount, sizeof(vk::DrawIndexedIndirectCommand));
+        commandBuffers[currentFrame].endRenderPass();
+
+        renderPass.beginRenderPass(swapchainFramebuffers[imageIndex], vk::Extent2D(width, height), commandBuffers[currentFrame]);
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline.graphicsPipeline);
-        uint32_t dynamicOffset = currentFrame * static_cast<uint32_t>(alignedUBOSize);
-        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, graphicsPipeline.pipelineLayout, 0, 1, &descriptorSet, 1, &dynamicOffset);
+        uint32_t dynamicOffset2 = currentFrame * static_cast<uint32_t>(alignedUBOSize);
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, graphicsPipeline.pipelineLayout, 0, 1, &descriptorSet, 1, &dynamicOffset2);
         commandBuffer.pushConstants<PushConstants>(graphicsPipeline.pipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, pushConstants);
         commandBuffer.setViewport(0, {vk::Viewport(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height), 0.0f, 1.0f)});
         commandBuffer.setScissor(0, {vk::Rect2D({0, 0}, {static_cast<uint32_t>(width), static_cast<uint32_t>(height)})});
         commandBuffer.bindVertexBuffers(0, {scene.vertexBuffer.buffer}, {0});
         commandBuffer.bindIndexBuffer(scene.indexBuffer.buffer, 0, vk::IndexType::eUint32);
         commandBuffer.drawIndexedIndirect(scene.indirectCommandsBuffer.buffer, 0, scene.meshCount, sizeof(vk::DrawIndexedIndirectCommand));
+        ImGui::Render();
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffers[currentFrame]);
+        commandBuffers[currentFrame].endRenderPass();
     }
 
     void renderUI() override {

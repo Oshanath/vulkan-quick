@@ -86,6 +86,10 @@ public:
         setNameOfObject(pipeline.objectType, (uint64_t)(VkPipeline)pipeline, name.c_str());
     }
 
+    void setNameOfObject(vk::Sampler sampler, std::string name) {
+        setNameOfObject(sampler.objectType, (uint64_t)(VkSampler)sampler, name.c_str());
+    }
+
     void setNameOfObject(vk::ObjectType type, uint64_t objectHandle, std::string name)
     {
         auto func = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(vkbInstance.instance, "vkSetDebugUtilsObjectNameEXT");

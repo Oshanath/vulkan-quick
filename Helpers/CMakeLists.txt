@@ -18,6 +18,8 @@ add_library(Helpers
     ${PROJECT_SOURCE_DIR}/external/imgui/imgui_tables.cpp
     ${PROJECT_SOURCE_DIR}/external/imgui/backends/imgui_impl_glfw.cpp
     ${PROJECT_SOURCE_DIR}/external/imgui/backends/imgui_impl_vulkan.cpp
+        src/ShadowMap.cpp
+        include/ShadowMap.h
 )
 
 target_link_libraries(Helpers

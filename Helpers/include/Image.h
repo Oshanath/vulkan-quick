@@ -61,9 +61,9 @@ static Image createImageFromFile(Application& app, std::string path) {
     return image;
 }
 
-static Image createDepthImage(Application& app) {
+static Image createDepthImage(Application& app, uint32_t width, uint32_t height) {
     Image image;
-    VkImageCreateInfo imageCreateInfo = vk::ImageCreateInfo({}, vk::ImageType::e2D, app.depthFormat, vk::Extent3D(app.width, app.height, 1), 1, 1, vk::SampleCountFlagBits::e1, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::SharingMode::eExclusive, 0, nullptr, vk::ImageLayout::eUndefined);
+    VkImageCreateInfo imageCreateInfo = vk::ImageCreateInfo({}, vk::ImageType::e2D, app.depthFormat, vk::Extent3D(width, height, 1), 1, 1, vk::SampleCountFlagBits::e1, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled, vk::SharingMode::eExclusive, 0, nullptr, vk::ImageLayout::eUndefined);
     VmaAllocationCreateInfo allocationCreateInfo = {.usage = VMA_MEMORY_USAGE_GPU_ONLY};
     VkImage imageOld;
     vmaCreateImage(app.vmaAllocator, &imageCreateInfo, &allocationCreateInfo, &imageOld, &image.imageAllocation, nullptr);

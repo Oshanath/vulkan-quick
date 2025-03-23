@@ -117,7 +117,7 @@ VmaAllocator Application::createVmaAllocator() {
 vk::DescriptorPool Application::createDescriptorPool() {
     std::vector poolSizes = {
         vk::DescriptorPoolSize(vk::DescriptorType::eUniformBufferDynamic, 1000),
-        vk::DescriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 1000),
+        vk::DescriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, 2000),
         vk::DescriptorPoolSize(vk::DescriptorType::eSampler, 1000),
         vk::DescriptorPoolSize(vk::DescriptorType::eSampledImage, 1000),
         vk::DescriptorPoolSize(vk::DescriptorType::eStorageImage, 1000),
@@ -129,7 +129,7 @@ vk::DescriptorPool Application::createDescriptorPool() {
         vk::DescriptorPoolSize(vk::DescriptorType::eInputAttachment, 1000)
     };
 
-    vk::DescriptorPoolCreateInfo poolInfo({vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind}, MAX_FRAMES_IN_FLIGHT, 1, poolSizes.data());
+    vk::DescriptorPoolCreateInfo poolInfo({vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind}, 100, poolSizes.size(), poolSizes.data());
     return device.createDescriptorPool(poolInfo);
 }
 

@@ -33,7 +33,8 @@ public:
     vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo;
     vk::Pipeline graphicsPipeline;
 
-    explicit GraphicsPipeline(const vk::Device& device, RenderPass renderPass, uint32_t width, uint32_t height);
+    GraphicsPipeline() {}
+    explicit GraphicsPipeline(const vk::Device& device, vk::RenderPass renderPass, uint32_t width, uint32_t height);
 
     void createLayoutAndPipeline(vk::Device& device, std::vector<vk::DescriptorSetLayout> descriptorSetLayouts, std::vector<vk::PushConstantRange> pushConstantRanges);
     void setVertexShader(Shader& shader);

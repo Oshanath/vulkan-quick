@@ -6,9 +6,7 @@
 
 #include <Scene.h>
 
-#include "RenderPass.h"
-
-GraphicsPipeline::GraphicsPipeline(const vk::Device& device, RenderPass renderPass, uint32_t width, uint32_t height)
+GraphicsPipeline::GraphicsPipeline(const vk::Device& device, vk::RenderPass renderPass, uint32_t width, uint32_t height)
 {
     dynamicStates = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
     dynamicStateCreateInfo = vk::PipelineDynamicStateCreateInfo({}, dynamicStates);
@@ -26,7 +24,7 @@ GraphicsPipeline::GraphicsPipeline(const vk::Device& device, RenderPass renderPa
     bindingDescription = Vertex::getBindingDescription();
     attributeDescriptions = Vertex::getAttributeDescriptions();
     vertexInputStateCreateInfo = vk::PipelineVertexInputStateCreateInfo({}, 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data());
-    pipelineCreateInfo = vk::GraphicsPipelineCreateInfo({}, shaderStages.size(), shaderStages.data(), &vertexInputStateCreateInfo, &inputAssemblyStateCreateInfo, nullptr, &viewportStateCreateInfo, &rasterizationStateCreateInfo, &multisampleStateCreateInfo, &depthStencilStateCreateInfo, &colorBlendStateCreateInfo, &dynamicStateCreateInfo, pipelineLayout, renderPass.renderPass, 0, nullptr, -1);
+    pipelineCreateInfo = vk::GraphicsPipelineCreateInfo({}, shaderStages.size(), shaderStages.data(), &vertexInputStateCreateInfo, &inputAssemblyStateCreateInfo, nullptr, &viewportStateCreateInfo, &rasterizationStateCreateInfo, &multisampleStateCreateInfo, &depthStencilStateCreateInfo, &colorBlendStateCreateInfo, &dynamicStateCreateInfo, pipelineLayout, renderPass, 0, nullptr, -1);
 }
 void GraphicsPipeline::createLayoutAndPipeline(vk::Device& device, std::vector<vk::DescriptorSetLayout> descriptorSetLayouts, std::vector<vk::PushConstantRange> pushConstantRanges) {
     pipelineLayoutCreateInfo = vk::PipelineLayoutCreateInfo({}, descriptorSetLayouts.size(), descriptorSetLayouts.data(), pushConstantRanges.size(), pushConstantRanges.data());
