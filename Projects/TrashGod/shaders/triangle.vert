@@ -25,15 +25,15 @@ layout(binding=0) uniform UniformBufferObject {
     vec4 cameraPos;
 } ubo;
 
-layout(binding=2) readonly buffer PerMeshDataSSBO {
+layout(binding=1) readonly buffer PerMeshDataSSBO {
     perMeshData data[];
 } meshData;
 
-layout(binding=3) readonly buffer PerInstanceDataSSBO {
+layout(binding=2) readonly buffer PerInstanceDataSSBO {
     perInstanceData data[];
 } instanceData;
 
-layout(binding=4) readonly buffer MaterialSSBO {
+layout(binding=3) readonly buffer MaterialSSBO {
     material data[];
 } materialData;
 

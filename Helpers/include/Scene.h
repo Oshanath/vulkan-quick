@@ -108,7 +108,7 @@ public:
     Buffer vertexBuffer;
     Buffer indexBuffer;
 
-    Model* addModel(Application& app, std::string path, float scaling = 1.0f, glm::mat4 rotation = glm::mat4(1.0f), glm::vec3 translation = glm::vec3(0.0f));
+    std::shared_ptr<Model> addModel(Application& app, std::string path, float scaling = 1.0f, glm::mat4 rotation = glm::mat4(1.0f), glm::vec3 translation = glm::vec3(0.0f));
     void generateBuffers(Application& app);
 };
 

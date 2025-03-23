@@ -4,13 +4,14 @@
 
 #include "GraphicsPipeline.h"
 
+#include <Scene.h>
+
 #include "RenderPass.h"
 
 GraphicsPipeline::GraphicsPipeline(const vk::Device& device, RenderPass renderPass, uint32_t width, uint32_t height)
 {
     dynamicStates = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
     dynamicStateCreateInfo = vk::PipelineDynamicStateCreateInfo({}, dynamicStates);
-    vertexInputStateCreateInfo = vk::PipelineVertexInputStateCreateInfo({}, 0, nullptr, 0, nullptr);
     inputAssemblyStateCreateInfo = vk::PipelineInputAssemblyStateCreateInfo({}, vk::PrimitiveTopology::eTriangleList, VK_FALSE);
     viewport = vk::Viewport(0.0f, 0.0f, width, height, 0.0f, 1.0f);
     scissor = vk::Rect2D({0, 0}, {width, height});
@@ -21,9 +22,14 @@ GraphicsPipeline::GraphicsPipeline(const vk::Device& device, RenderPass renderPa
     colorBlendStateCreateInfo = vk::PipelineColorBlendStateCreateInfo({}, VK_FALSE, vk::LogicOp::eCopy, 1, &colorBlendAttachmentState, {0.0f, 0.0f, 0.0f, 0.0f});
     pipelineLayoutCreateInfo = vk::PipelineLayoutCreateInfo({}, 0, nullptr, 0, nullptr);
     depthStencilStateCreateInfo = vk::PipelineDepthStencilStateCreateInfo({}, VK_TRUE, VK_TRUE, vk::CompareOp::eLess, VK_FALSE, VK_FALSE, {}, {}, 0.0f, 1.0f);
+
+    bindingDescription = Vertex::getBindingDescription();
+    attributeDescriptions = Vertex::getAttributeDescriptions();
+    vertexInputStateCreateInfo = vk::PipelineVertexInputStateCreateInfo({}, 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data());
     pipelineCreateInfo = vk::GraphicsPipelineCreateInfo({}, shaderStages.size(), shaderStages.data(), &vertexInputStateCreateInfo, &inputAssemblyStateCreateInfo, nullptr, &viewportStateCreateInfo, &rasterizationStateCreateInfo, &multisampleStateCreateInfo, &depthStencilStateCreateInfo, &colorBlendStateCreateInfo, &dynamicStateCreateInfo, pipelineLayout, renderPass.renderPass, 0, nullptr, -1);
 }
-void GraphicsPipeline::createLayoutAndPipeline(vk::Device& device) {
+void GraphicsPipeline::createLayoutAndPipeline(vk::Device& device, std::vector<vk::DescriptorSetLayout> descriptorSetLayouts, std::vector<vk::PushConstantRange> pushConstantRanges) {
+    pipelineLayoutCreateInfo = vk::PipelineLayoutCreateInfo({}, descriptorSetLayouts.size(), descriptorSetLayouts.data(), pushConstantRanges.size(), pushConstantRanges.data());
     this->pipelineLayout = device.createPipelineLayout(pipelineLayoutCreateInfo);
 
     this->pipelineCreateInfo.layout = pipelineLayout;

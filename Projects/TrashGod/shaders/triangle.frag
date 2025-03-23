@@ -41,13 +41,11 @@ layout(location = 2) flat in uint materialIndex;
 
 layout(location = 0) out vec4 outColor;
 
-layout(binding = 1) uniform sampler2D texSampler;
-
-layout(binding=4) readonly buffer MaterialSSBO {
+layout(binding=3) readonly buffer MaterialSSBO {
     material data[];
 } materialData;
 
-layout(binding = 5) readonly buffer LightSources {
+layout(binding = 4) readonly buffer LightSources {
     lightSource lightSources[];
 };
 

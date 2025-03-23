@@ -18,6 +18,8 @@ public:
     std::vector<vk::DynamicState> dynamicStates;
     vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo;
     vk::PipelineLayout pipelineLayout;
+    vk::VertexInputBindingDescription bindingDescription;
+    std::array<vk::VertexInputAttributeDescription, 2> attributeDescriptions;
     vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo;
     vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo;
     vk::Viewport viewport;
@@ -33,7 +35,7 @@ public:
 
     explicit GraphicsPipeline(const vk::Device& device, RenderPass renderPass, uint32_t width, uint32_t height);
 
-    void createLayoutAndPipeline(vk::Device& device);
+    void createLayoutAndPipeline(vk::Device& device, std::vector<vk::DescriptorSetLayout> descriptorSetLayouts, std::vector<vk::PushConstantRange> pushConstantRanges);
     void setVertexShader(Shader& shader);
     void setFragmentShader(Shader &shader);
 };

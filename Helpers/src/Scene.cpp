@@ -15,7 +15,7 @@
 #define VULKAN_HPP_STORAGE_DISPATCH_GLOBALS
 #include <vulkan/vulkan.hpp>
 
-Model* Scene::addModel(Application& app, std::string path, float scaling, glm::mat4 rotation, glm::vec3 translation) {
+std::shared_ptr<Model> Scene::addModel(Application& app, std::string path, float scaling, glm::mat4 rotation, glm::vec3 translation) {
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile( path, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType);
     if (scene == nullptr) {
@@ -100,7 +100,7 @@ Model* Scene::addModel(Application& app, std::string path, float scaling, glm::m
 
     meshCount += model.meshes.size();
     models.push_back(model);
-    return &models.back();
+    return std::shared_ptr<Model>(&models.back());
 }
 
 void Scene::generateBuffers(Application &app) {
