@@ -34,8 +34,6 @@ public:
         .ambientFactor = 0.09f
     };
 
-    Buffer vertexBuffer;
-    Buffer indexBuffer;
     Scene scene;
     Model* trashGod;
     Model* trashGod2;
@@ -65,8 +63,6 @@ public:
         trashGod = scene.addModel(*this, "Resources/trashGod/scene.fbx", 1.0f, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
         scene.lightSources.push_back(LightSource(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(1690.77f, 4482.58f, 6788.77f), glm::vec3(-0.703004, -0.437229, -0.560906), LightSourceType::DIRECTIONAL_LIGHT));
         scene.generateBuffers(*this);
-        vertexBuffer = createBufferWithData(*this, sizeof(Vertex) * scene.vertices.size(), vk::BufferUsageFlagBits::eVertexBuffer, VMA_MEMORY_USAGE_GPU_ONLY, (void*)scene.vertices.data());
-        indexBuffer = createBufferWithData(*this, sizeof(uint32_t) * scene.indices.size(), vk::BufferUsageFlagBits::eIndexBuffer, VMA_MEMORY_USAGE_GPU_ONLY, (void*)scene.indices.data());
 
         vk::DescriptorBufferInfo bufferInfo(uniformBuffer.buffer, 0, alignedUBOSize);
         vk::DescriptorImageInfo imageInfo(sampler, texture.imageView, vk::ImageLayout::eShaderReadOnlyOptimal);
@@ -125,8 +121,8 @@ public:
         commandBuffer.pushConstants<PushConstants>(graphicsPipeline.pipelineLayout, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, pushConstants);
         commandBuffer.setViewport(0, {vk::Viewport(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height), 0.0f, 1.0f)});
         commandBuffer.setScissor(0, {vk::Rect2D({0, 0}, {static_cast<uint32_t>(width), static_cast<uint32_t>(height)})});
-        commandBuffer.bindVertexBuffers(0, {vertexBuffer.buffer}, {0});
-        commandBuffer.bindIndexBuffer(indexBuffer.buffer, 0, vk::IndexType::eUint32);
+        commandBuffer.bindVertexBuffers(0, {scene.vertexBuffer.buffer}, {0});
+        commandBuffer.bindIndexBuffer(scene.indexBuffer.buffer, 0, vk::IndexType::eUint32);
         commandBuffer.drawIndexedIndirect(scene.indirectCommandsBuffer.buffer, 0, scene.meshCount, sizeof(vk::DrawIndexedIndirectCommand));
     }
 

@@ -128,4 +128,7 @@ void Scene::generateBuffers(Application &app) {
     perMeshBuffer = createBufferWithData(app, sizeof(PerMeshData) * perMeshData.size(), vk::BufferUsageFlagBits::eStorageBuffer, VMA_MEMORY_USAGE_GPU_ONLY, perMeshData.data());
     materialBuffer = createBufferWithData(app, sizeof(Material) * materials.size(), vk::BufferUsageFlagBits::eStorageBuffer, VMA_MEMORY_USAGE_GPU_ONLY, materials.data());
     lightSourcesBuffer = createBufferWithData(app, sizeof(LightSource) * lightSources.size(), vk::BufferUsageFlagBits::eStorageBuffer, VMA_MEMORY_USAGE_GPU_ONLY, lightSources.data());
+    vertexBuffer = createBufferWithData(app, sizeof(Vertex) * vertices.size(), vk::BufferUsageFlagBits::eVertexBuffer, VMA_MEMORY_USAGE_GPU_ONLY, (void*)vertices.data());
+    indexBuffer = createBufferWithData(app, sizeof(uint32_t) * indices.size(), vk::BufferUsageFlagBits::eIndexBuffer, VMA_MEMORY_USAGE_GPU_ONLY, (void*)indices.data());
+
 }
