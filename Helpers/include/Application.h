@@ -69,6 +69,35 @@ public:
     size_t getAlignedUBOSize(size_t originalSize);
 
     vk::Queue getGraphicsQueue();
+
+    void setNameOfObject(vk::Buffer buffer, std::string name) {
+        setNameOfObject(buffer.objectType, (uint64_t)(VkBuffer)buffer, name.c_str());
+    }
+
+    void setNameOfObject(vk::Image image, std::string name) {
+        setNameOfObject(image.objectType, (uint64_t)(VkImage)image, name.c_str());
+    }
+
+    void setNameOfObject(vk::ImageView image, std::string name) {
+        setNameOfObject(image.objectType, (uint64_t)(VkImageView)image, name.c_str());
+    }
+
+    void setNameOfObject(vk::Pipeline pipeline, std::string name) {
+        setNameOfObject(pipeline.objectType, (uint64_t)(VkPipeline)pipeline, name.c_str());
+    }
+
+    void setNameOfObject(vk::ObjectType type, uint64_t objectHandle, std::string name)
+    {
+        auto func = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(vkbInstance.instance, "vkSetDebugUtilsObjectNameEXT");
+
+        VkDebugUtilsObjectNameInfoEXT nameInfo{};
+        nameInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+        nameInfo.objectType = VkObjectType(type);
+        nameInfo.objectHandle = objectHandle;
+        nameInfo.pObjectName = name.c_str();
+
+        func(device, &nameInfo);
+    }
 };
 
 #endif //APPLICATION_H
