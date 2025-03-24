@@ -23,16 +23,16 @@ void Camera::move() {
         position -= speed * deltaTime * direction;
     }
     if (moveLeft) {
-        position -= speed * deltaTime * glm::normalize(glm::cross(direction, glm::vec3(0.0f, 0.0f, 1.0f)));
+        position -= speed * deltaTime * glm::normalize(glm::cross(direction, glm::vec3(0.0f, 1.0f, 0.0f)));
     }
     if (moveRight) {
-        position += speed * deltaTime * glm::normalize(glm::cross(direction, glm::vec3(0.0f, 0.0f, 1.0f)));
+        position += speed * deltaTime * glm::normalize(glm::cross(direction, glm::vec3(0.0f, 1.0f, 0.0f)));
     }
     if (moveUp) {
-        position += speed * deltaTime * glm::vec3(0.0f, 0.0f, 1.0f);
+        position += speed * deltaTime * glm::vec3(0.0f, 1.0f, 0.0f);
     }
     if (moveDown) {
-        position -= speed * deltaTime * glm::vec3(0.0f, 0.0f, 1.0f);
+        position -= speed * deltaTime * glm::vec3(0.0f, 1.0f, 0.0f);
     }
 
     if (looking) {
@@ -41,8 +41,8 @@ void Camera::move() {
         lastX = currentX;
         lastY = currentY;
 
-        direction = glm::normalize(glm::rotate(glm::mat4(1.0f), -(float)yaw, glm::vec3(0.0f, 0.0f, 1.0f)) * glm::vec4(direction, 0.0f));
-        glm::vec3 right = glm::normalize(glm::cross(direction, glm::vec3(0.0f, 0.0f, 1.0f)));
+        direction = glm::normalize(glm::rotate(glm::mat4(1.0f), -(float)yaw, glm::vec3(0.0f, 1.0f, 0.0f)) * glm::vec4(direction, 0.0f));
+        glm::vec3 right = glm::normalize(glm::cross(direction, glm::vec3(0.0f, 1.0f, 0.0f)));
         direction = glm::normalize(glm::rotate(glm::mat4(1.0f), -(float)pitch, right) * glm::vec4(direction, 0.0f));
     }
 }

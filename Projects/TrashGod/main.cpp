@@ -47,8 +47,8 @@ public:
         MainLoop(width, height, title),
         uniformBuffer(*this, uniformBufferSize, vk::BufferUsageFlagBits::eUniformBuffer, VMA_MEMORY_USAGE_CPU_TO_GPU)
     {
-        trashGod = scene.addModel(*this, "Resources/trashGod/scene.fbx", 1.0f, glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
-        scene.lightSources.push_back(LightSource(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(1401.45, 3000.43, 4182.14), glm::vec3(-0.81861, -0.404965, -0.407285), LightSourceType::DIRECTIONAL_LIGHT));
+        trashGod = scene.addModel(*this, "Resources/trashGod/scene.fbx");
+        scene.lightSources.push_back(LightSource(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(1389.6, 4042.11, -2454.57), glm::vec3(-0.82018, -0.410442, 0.39855), LightSourceType::DIRECTIONAL_LIGHT));
         // scene.lightSources.push_back(LightSource(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(-2270.03f, 2249.98f, 2652.1f), glm::vec3(-0.380248f, -0.83261f, -0.402705f), LightSourceType::DIRECTIONAL_LIGHT));
         scene.generateBuffers(*this);
         shadowMap = ShadowMap(*this, 20000, uniformBuffer, alignedUBOSize, scene);
@@ -61,16 +61,17 @@ public:
         graphicsPipeline.setFragmentShader(fragmentShader);
         graphicsPipeline.createLayoutAndPipeline(device, std::vector{descriptorSetLayout}, std::vector{pushConstantRange});
 
-        camera.position = glm::vec3(-2620.45f, 13.9092f, 1196.41f);
-        camera.direction = glm::vec3(-0.894048f, -0.342042f, -0.289284f);
+        camera.position = glm::vec3(1389.6, 4042.11, -2454.57);
+        camera.direction = glm::vec3(-0.82018, -0.410442, 0.39855);
     }
 
     void render(vk::CommandBuffer& commandBuffer, int currentFrame) override {
 
         UniformBufferObject ubo{
             .view = camera.getViewMatrix(),
-            .proj = glm::perspective(glm::radians(45.0f), width / (float) height, 10.0f, 10000.0f),
-            .lightViewProj = glm::ortho(-5000.0f, 5000.0f, -5000.0f, 5000.0f, 10.0f, 10000.0f) * glm::lookAt(scene.lightSources[0].position, scene.lightSources[0].position + scene.lightSources[0].direction, glm::vec3(0.0f, 1.0f, 0.0f)),
+            .proj = glm::perspective(glm::radians(45.0f), width / (float) height, 10.0f, 20000.0f),
+            // .proj = glm::ortho(-5000.0f, 5000.0f, -5000.0f, 5000.0f, 10.0f, 10000.0f),
+            .lightViewProj = glm::ortho(-5000.0f, 5000.0f, -5000.0f, 5000.0f, 10.0f, 20000.0f) * glm::lookAt(scene.lightSources[0].position, scene.lightSources[0].position + scene.lightSources[0].direction, glm::vec3(0.0f, 1.0f, 0.0f)),
             .cameraPos = glm::vec4(camera.position, 1.0f)
         };
         ubo.proj[1][1] *= -1;

@@ -42,7 +42,7 @@ public:
     }
 
     [[nodiscard]] glm::mat4 getViewMatrix() const {
-        return glm::lookAt(position, position + direction, glm::vec3(0.0f, 0.0f, 1.0f));
+        return glm::lookAt(position, position + direction, glm::vec3(0.0f, 1.0f, 0.0f));
     }
 };
 

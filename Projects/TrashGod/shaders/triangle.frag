@@ -110,10 +110,9 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 float ShadowCalculation(uint lightSourceIndex) {
     vec4 fragPosLightSpace = ubo.lightViewProj * fragPos;
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    projCoords = projCoords * 0.5 + 0.5;
+    projCoords.xy = projCoords.xy * 0.5 + 0.5;
     float closestDepth = texture(shadowMap, projCoords.xy).r;
     float currentDepth = projCoords.z;
-    debugPrintfEXT("Current depth: %f, Closest depth: %f\n", currentDepth, closestDepth);
     return currentDepth > closestDepth  ? 1.0 : 0.0;
 }
 
