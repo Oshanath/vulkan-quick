@@ -27,6 +27,7 @@ struct material {
 layout( push_constant ) uniform constants
 {
     float ambientFactor;
+    float lightIntensity;
 } PushConstants;
 
 layout(binding=0) uniform UniformBufferObject {
@@ -122,6 +123,7 @@ void main() {
     vec3 V = normalize(ubo.cameraPos.xyz - vec3(fragPos));
 
     vec3  lightColor  = lightSources[0].color;
+    float lightIntensity = PushConstants.lightIntensity;
     vec3  wi          = calculateWi(0);
     float cosTheta    = max(dot(N, wi), 0.0);
 
@@ -139,7 +141,7 @@ void main() {
 
         float distance = length(lightSources[i].position - vec3(fragPos));
         float attenuation = calculateAttenuation(vec3(fragPos), lightSources[i].position, 0);
-        vec3  radiance    = lightColor * attenuation * cosTheta;
+        vec3  radiance    = lightColor * lightIntensity * attenuation * cosTheta;
 
         vec3 F0 = vec3(0.04);
         F0      = mix(F0, albedo, metallic);

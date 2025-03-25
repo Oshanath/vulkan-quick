@@ -28,6 +28,7 @@ class Triangle : public MainLoop{
 
     struct PushConstants {
         float ambientFactor;
+        float lightIntensity;
     };
 
 public:
@@ -35,7 +36,7 @@ public:
     size_t uniformBufferSize = alignedUBOSize * MAX_FRAMES_IN_FLIGHT;
 
     GraphicsPipeline graphicsPipeline = GraphicsPipeline(device, renderPass.renderPass, width, height);
-    PushConstants pushConstants {.ambientFactor = 0.09f};
+    PushConstants pushConstants {.ambientFactor = 0.09f, .lightIntensity = 4.0f};
     Scene scene;
     std::shared_ptr<Model> trashGod;
     Buffer uniformBuffer;
@@ -51,7 +52,7 @@ public:
         scene.lightSources.push_back(LightSource(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(1389.6, 4042.11, -2454.57), glm::vec3(-0.82018, -0.410442, 0.39855), LightSourceType::DIRECTIONAL_LIGHT));
         // scene.lightSources.push_back(LightSource(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(-2270.03f, 2249.98f, 2652.1f), glm::vec3(-0.380248f, -0.83261f, -0.402705f), LightSourceType::DIRECTIONAL_LIGHT));
         scene.generateBuffers(*this);
-        shadowMap = ShadowMap(*this, 20000, uniformBuffer, alignedUBOSize, scene);
+        shadowMap = ShadowMap(*this, 5000, uniformBuffer, alignedUBOSize, scene);
 
         prepareDescriptorSets();
         vk::PushConstantRange pushConstantRange = vk::PushConstantRange(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, sizeof(PushConstants));
@@ -106,6 +107,7 @@ public:
     void renderUI() override {
         ImGui::Text("Controls\n");
         ImGui::SliderFloat("Ambient Factor",  &pushConstants.ambientFactor, 0.0f, 0.25f);
+        ImGui::SliderFloat("Light Intensity", &pushConstants.lightIntensity, 0.0f, 10.0f);
     }
 
     void prepareDescriptorSets() {
