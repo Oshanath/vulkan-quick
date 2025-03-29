@@ -20,6 +20,7 @@ add_library(Helpers
     ${PROJECT_SOURCE_DIR}/external/imgui/backends/imgui_impl_vulkan.cpp
         src/ShadowMap.cpp
         include/ShadowMap.h
+        src/VarianceShadowMap.cpp
 )
 
 target_link_libraries(Helpers

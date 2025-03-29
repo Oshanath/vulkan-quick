@@ -90,6 +90,10 @@ public:
         setNameOfObject(sampler.objectType, (uint64_t)(VkSampler)sampler, name.c_str());
     }
 
+    void setNameOfObject(vk::RenderPass sampler, std::string name) {
+        setNameOfObject(sampler.objectType, (uint64_t)(VkRenderPass)sampler, name.c_str());
+    }
+
     void setNameOfObject(vk::ObjectType type, uint64_t objectHandle, std::string name)
     {
         auto func = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(vkbInstance.instance, "vkSetDebugUtilsObjectNameEXT");

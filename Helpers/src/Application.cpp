@@ -31,7 +31,8 @@ GLFWwindow * Application::createWindow(int width, int height, std::string title)
 
 vkb::Instance Application::createInstance() {
     vkb::InstanceBuilder builder;
-    auto inst_ret = builder.enable_validation_layers()
+    auto inst_ret = builder
+        .enable_validation_layers()
         .use_default_debug_messenger()
         .build();
     if (!inst_ret) {
@@ -66,6 +67,7 @@ vkb::PhysicalDevice Application::selectPhysicalDevice() {
     vk::PhysicalDeviceFeatures features{};
     features.samplerAnisotropy = VK_TRUE;
     features.multiDrawIndirect = VK_TRUE;
+    features.fragmentStoresAndAtomics = VK_TRUE;
 
     vkb::PhysicalDeviceSelector physicalDeviceSelector({ vkbInstance });
     auto phys_ret = physicalDeviceSelector.set_surface(surface)
