@@ -51,7 +51,7 @@ layout(binding = 4) readonly buffer LightSources {
     lightSource lightSources[];
 };
 
-layout(binding = 5, r32f) readonly uniform image2DArray shadowMap;
+layout(binding = 5, rg32f) readonly uniform image2D shadowMap;
 
 float calculateAttenuation(vec3 fragPos, vec3 lightPosition, uint lightSourceIndex) {
     if (lightSources[lightSourceIndex].type == DIRECTIONAL_LIGHT) {
@@ -112,7 +112,7 @@ float ShadowCalculation(uint lightSourceIndex) {
     vec4 fragPosLightSpace = ubo.lightViewProj * fragPos;
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords.xy = projCoords.xy * 0.5 + 0.5;
-    float closestDepth = imageLoad(shadowMap, ivec3(projCoords.xy * 5000, 0)).r;
+    float closestDepth = imageLoad(shadowMap, ivec2(projCoords.xy * 5000)).r;
     float currentDepth = length(vec3(fragPos) - lightSources[lightSourceIndex].position) / 10000.0;
     return currentDepth > closestDepth  ? 1.0 : 0.0;
 }

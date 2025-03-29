@@ -79,6 +79,9 @@ public:
         ubo.proj[1][1] *= -1;
         uniformBuffer.copyData(vmaAllocator, &ubo, sizeof(ubo), currentFrame * alignedUBOSize);
 
+        vk::ImageMemoryBarrier preBarrier = vk::ImageMemoryBarrier(vk::AccessFlagBits::eShaderRead, vk::AccessFlagBits::eColorAttachmentWrite, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, shadowMap.momentImages, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
+        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eFragmentShader, vk::PipelineStageFlagBits::eColorAttachmentOutput, {}, {}, {}, preBarrier);
+
         shadowMap.beginRenderPass(commandBuffer);
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, shadowMap.graphicsPipeline.graphicsPipeline);
         uint32_t dynamicOffset1 = currentFrame * static_cast<uint32_t>(alignedUBOSize);
@@ -89,6 +92,9 @@ public:
         commandBuffer.bindIndexBuffer(scene.indexBuffer.buffer, 0, vk::IndexType::eUint32);
         commandBuffer.drawIndexedIndirect(scene.indirectCommandsBuffer.buffer, 0, scene.meshCount, sizeof(vk::DrawIndexedIndirectCommand));
         commandBuffers[currentFrame].endRenderPass();
+
+        vk::ImageMemoryBarrier barrier = vk::ImageMemoryBarrier( vk::AccessFlagBits::eColorAttachmentWrite, vk::AccessFlagBits::eShaderRead,vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,VK_QUEUE_FAMILY_IGNORED,VK_QUEUE_FAMILY_IGNORED, shadowMap.momentImages, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
+        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eFragmentShader, {}, {}, {}, barrier);
 
         renderPass.beginRenderPass(swapchainFramebuffers[imageIndex], vk::Extent2D(width, height), commandBuffers[currentFrame]);
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline.graphicsPipeline);
@@ -128,7 +134,7 @@ public:
         vk::DescriptorBufferInfo perInstanceBufferInfo(scene.perInstanceBuffer.buffer, 0, sizeof(PerInstanceData) * scene.perInstanceData.size());
         vk::DescriptorBufferInfo materialBufferInfo(scene.materialBuffer.buffer, 0, sizeof(Material) * scene.materials.size());
         vk::DescriptorBufferInfo lightSourcesBufferInfo(scene.lightSourcesBuffer.buffer, 0, sizeof(LightSource) * scene.lightSources.size());
-        vk::DescriptorImageInfo shadowMapDescriptorImageInfo(VK_NULL_HANDLE, shadowMap.combinedImageView, vk::ImageLayout::eGeneral);
+        vk::DescriptorImageInfo shadowMapDescriptorImageInfo(VK_NULL_HANDLE, shadowMap.momentImageView, vk::ImageLayout::eGeneral);
 
         std::array descriptorWrites = {
             vk::WriteDescriptorSet(descriptorSet, 0, 0, 1, vk::DescriptorType::eUniformBufferDynamic, nullptr, &bufferInfo),

@@ -13,8 +13,7 @@ struct lightSource {
 
 layout(location = 0) in vec3 fragPos;
 
-layout(location = 0) out float moment1;
-layout(location = 1) out float moment2;
+layout(location = 0) out vec2 moments;
 
 layout(binding = 3) readonly buffer LightSources {
     lightSource lightSources[];
@@ -24,6 +23,5 @@ void main() {
     ivec3 coords = ivec3(gl_FragCoord.xy, 0);
     float depth = length(fragPos - lightSources[0].position);
     depth = depth / 10000.0;
-    moment1 = depth;
-    moment2 = depth * depth;
+    moments = vec2(depth, depth * depth);
 }

@@ -16,8 +16,7 @@ public:
     uint32_t width;
 
     vk::Image momentImages;
-    std::array<vk::ImageView, 2> individualImageViews;
-    vk::ImageView combinedImageView;
+    vk::ImageView momentImageView;
     VmaAllocation momentImageAllocation;
     Image depthImage;
     vk::RenderPass renderPass;

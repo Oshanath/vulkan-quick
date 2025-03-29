@@ -172,6 +172,7 @@ vkb::Swapchain MainLoop::createSwapchain() {
 RenderPass MainLoop::createRenderPass() {
     RenderPass renderPass(device, vk::Format(vkbSwapchain.image_format), depthFormat);
     renderPass.createRenderPass(device);
+    setNameOfObject(renderPass.renderPass, "RenderPass: MainLoop render pass");
     return std::move(renderPass);
 }
 

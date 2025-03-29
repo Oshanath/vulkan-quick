@@ -4,6 +4,8 @@
 
 #include "RenderPass.h"
 
+#include <Application.h>
+
 RenderPass::RenderPass() {
 }
 
@@ -20,13 +22,20 @@ RenderPass::RenderPass(vk::Device& device, vk::Format format, vk::Format depthFo
 }
 
 void RenderPass::createRenderPass(vk::Device& device) {
-    dependency = vk::SubpassDependency(VK_SUBPASS_EXTERNAL, 0,
-        vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests,
-        vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests,
-        {},
-        vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite);
-    renderPassCreateInfo.dependencyCount = 1;
-    renderPassCreateInfo.pDependencies = &dependency;
+    dependencies = {
+        vk::SubpassDependency(VK_SUBPASS_EXTERNAL, 0,
+            vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests,
+            vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests,
+            {},
+            vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite),
+        vk::SubpassDependency(0, VK_SUBPASS_EXTERNAL,
+            vk::PipelineStageFlagBits::eLateFragmentTests | vk::PipelineStageFlagBits::eColorAttachmentOutput,
+            vk::PipelineStageFlagBits::eTopOfPipe,
+            vk::AccessFlagBits::eDepthStencilAttachmentWrite | vk::AccessFlagBits::eColorAttachmentWrite,
+            {})
+    };
+    renderPassCreateInfo.dependencyCount = dependencies.size();
+    renderPassCreateInfo.pDependencies = dependencies.data();
 
     this->renderPass = device.createRenderPass(renderPassCreateInfo);
 }

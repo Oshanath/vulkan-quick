@@ -90,8 +90,8 @@ public:
         setNameOfObject(sampler.objectType, (uint64_t)(VkSampler)sampler, name.c_str());
     }
 
-    void setNameOfObject(vk::RenderPass sampler, std::string name) {
-        setNameOfObject(sampler.objectType, (uint64_t)(VkRenderPass)sampler, name.c_str());
+    void setNameOfObject(vk::RenderPass renderPass, std::string name) {
+        setNameOfObject(renderPass.objectType, (uint64_t)(VkRenderPass)renderPass, name.c_str());
     }
 
     void setNameOfObject(vk::ObjectType type, uint64_t objectHandle, std::string name)
