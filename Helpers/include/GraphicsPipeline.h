@@ -36,7 +36,7 @@ public:
     GraphicsPipeline() {}
     explicit GraphicsPipeline(const vk::Device& device, vk::RenderPass renderPass, uint32_t width, uint32_t height);
 
-    void createLayoutAndPipeline(vk::Device& device, std::vector<vk::DescriptorSetLayout> descriptorSetLayouts, std::vector<vk::PushConstantRange> pushConstantRanges);
+    void createLayoutAndPipeline(vk::Device& device, std::vector<vk::DescriptorSetLayout> descriptorSetLayouts, std::vector<vk::PushConstantRange> pushConstantRanges, vk::RenderPass renderPass);
     void setVertexShader(Shader& shader);
     void setFragmentShader(Shader &shader);
 };
