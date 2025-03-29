@@ -94,6 +94,35 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
     return ggx1 * ggx2;
 }
 
+vec2 getMoments(ivec2 coords) {
+    int span = 4;
+    int width = span * 2 + 1;
+    vec2 moments = vec2(0.0);
+    for (int x = 0; x < width; x++) {
+        for (int y = 0; y < width; y++) {
+            vec2 depth = imageLoad(shadowMap, coords - ivec2(span, span) + ivec2(x, y)).rg;
+            moments += depth;
+        }
+    }
+    return moments / (width * width);
+}
+
+float ShadowCalculationUsingVariance(uint lightSourceIndex) {
+    vec4 fragPosLightSpace = ubo.lightViewProj * fragPos;
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords.xy = (projCoords.xy * 0.5 + 0.5) * 5000;
+    float currentDepth = length(vec3(fragPos) - lightSources[lightSourceIndex].position) / 10000.0;
+
+    // Chebyshev's inequality
+    vec2 moments = getMoments(ivec2(projCoords.xy));
+    float p = float(currentDepth <= moments.x);
+
+    float variance = max(moments.y - moments.x * moments.x, 0.0);
+    float d = currentDepth - moments.x;
+    float pMax = variance / (variance + d * d);
+    return max(p, pMax);
+}
+
 float ShadowCalculation(uint lightSourceIndex) {
     vec4 fragPosLightSpace = ubo.lightViewProj * fragPos;
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
@@ -149,8 +178,8 @@ void main() {
         Lo += (kD * albedo / PI + specular) * radiance * NdotL;
 
         vec3 ambient = vec3(PushConstants.ambientFactor) * albedo;
-        float shadow = ShadowCalculation(i);
-        vec3 color   = ambient + (1.0 - shadow) * Lo;
+        float shadow = ShadowCalculationUsingVariance(i);
+        vec3 color   = ambient + shadow * Lo;
         finalColor += color;
     }
 
