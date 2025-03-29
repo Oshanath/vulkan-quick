@@ -8,21 +8,7 @@
 
 #define PI 3.14159265359
 
-struct lightSource {
-    vec3 color;
-    float intensity;
-    vec3 position;
-    uint type;
-    vec3 direction;
-    float padding;
-};
-
-struct material {
-    vec3 albedo;
-    float metallic;
-    vec3 emissive;
-    float roughness;
-};
+#include "common.h"
 
 layout( push_constant ) uniform constants
 {

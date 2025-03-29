@@ -3,21 +3,7 @@
 #extension GL_EXT_nonuniform_qualifier : require
 #extension GL_EXT_debug_printf : require
 
-struct perMeshData {
-    uint startInstance;
-    uint materialIndex;
-};
-
-struct perInstanceData {
-    mat4 model;
-};
-
-struct material {
-    vec3 albedo;
-    float metallic;
-    vec3 emissive;
-    float roughness;
-};
+#include "common.h"
 
 layout(binding=0) uniform UniformBufferObject {
     mat4 view;
