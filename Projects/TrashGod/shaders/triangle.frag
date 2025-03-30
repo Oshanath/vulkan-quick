@@ -7,6 +7,7 @@
 #define SPOT_LIGHT 2
 
 #define PI 3.14159265359
+#define SHADOW_MAP_SIZE 2048
 
 #include "common.h"
 
@@ -97,20 +98,30 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 vec2 getMoments(ivec2 coords) {
     int span = 4;
     int width = span * 2 + 1;
-    vec2 moments = vec2(0.0);
-    for (int x = 0; x < width; x++) {
-        for (int y = 0; y < width; y++) {
-            vec2 depth = imageLoad(shadowMap, coords - ivec2(span, span) + ivec2(x, y)).rg;
-            moments += depth;
-        }
-    }
-    return moments / (width * width);
+
+//    vec2 moments = vec2(0.0);
+//    for (int x = 0; x < width; x++) {
+//        for (int y = 0; y < width; y++) {
+//            vec2 depth = imageLoad(shadowMap, coords - ivec2(span, span) + ivec2(x, y)).rg;
+//            moments += depth;
+//        }
+//    }
+//    return moments / (width * width);
+
+    ivec2 maxCoords = coords + ivec2(span, span);
+    ivec2 minCoords = coords - ivec2(span + 1, span + 1);
+    vec2 downRight = imageLoad(shadowMap, maxCoords).rg;
+    vec2 downLeft = imageLoad(shadowMap, ivec2(minCoords.x, maxCoords.y)).rg;
+    vec2 upRight = imageLoad(shadowMap, ivec2(maxCoords.x, minCoords.y)).rg;
+    vec2 upLeft = imageLoad(shadowMap, minCoords).rg;
+    vec2 value = (downRight + upLeft - downLeft - upRight) / (width * width);
+    return value;
 }
 
 float ShadowCalculationUsingVariance(uint lightSourceIndex) {
     vec4 fragPosLightSpace = ubo.lightViewProj * fragPos;
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    projCoords.xy = (projCoords.xy * 0.5 + 0.5) * 5000;
+    projCoords.xy = (projCoords.xy * 0.5 + 0.5) * SHADOW_MAP_SIZE;
     float currentDepth = length(vec3(fragPos) - lightSources[lightSourceIndex].position) / 10000.0;
 
     // Chebyshev's inequality
@@ -127,7 +138,7 @@ float ShadowCalculation(uint lightSourceIndex) {
     vec4 fragPosLightSpace = ubo.lightViewProj * fragPos;
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords.xy = projCoords.xy * 0.5 + 0.5;
-    float closestDepth = imageLoad(shadowMap, ivec2(projCoords.xy * 5000)).r;
+    float closestDepth = imageLoad(shadowMap, ivec2(projCoords.xy * SHADOW_MAP_SIZE)).r;
     float currentDepth = length(vec3(fragPos) - lightSources[lightSourceIndex].position) / 10000.0;
     return currentDepth > closestDepth  ? 1.0 : 0.0;
 }

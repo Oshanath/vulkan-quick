@@ -29,9 +29,9 @@ VarianceShadowMap::VarianceShadowMap(Application& app, uint32_t width, Buffer& u
             vk::AccessFlagBits::eDepthStencilAttachmentWrite | vk::AccessFlagBits::eColorAttachmentWrite),
         vk::SubpassDependency(0, VK_SUBPASS_EXTERNAL,
             vk::PipelineStageFlagBits::eLateFragmentTests | vk::PipelineStageFlagBits::eColorAttachmentOutput,
-            vk::PipelineStageFlagBits::eTopOfPipe,
+            vk::PipelineStageFlagBits::eComputeShader | vk::PipelineStageFlagBits::eTopOfPipe,
             vk::AccessFlagBits::eDepthStencilAttachmentWrite | vk::AccessFlagBits::eColorAttachmentWrite,
-            {})
+            vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite)
     };
     renderPassCreateInfo.dependencyCount = subpassDependencies.size();
     renderPassCreateInfo.pDependencies = subpassDependencies.data();
@@ -49,6 +49,12 @@ VarianceShadowMap::VarianceShadowMap(Application& app, uint32_t width, Buffer& u
     graphicsPipeline.setVertexShader(vertexShader);
     graphicsPipeline.setFragmentShader(fragmentShader);
     graphicsPipeline.createLayoutAndPipeline(app.device, std::vector{descriptorSetLayout}, {}, renderPass);
+
+    Shader computeShader("./shaders/sat.comp.spv", app.device);
+    vk::PushConstantRange pushConstantRange = vk::PushConstantRange(vk::ShaderStageFlagBits::eCompute, 0, sizeof(SATPushConstants));
+    vk::PipelineShaderStageCreateInfo computeShaderStageCreateInfo({}, vk::ShaderStageFlagBits::eCompute, computeShader.shaderModule, "main");
+    satComputePipelineLayout = app.device.createPipelineLayout(vk::PipelineLayoutCreateInfo({}, 1, &descriptorSetLayout, 1, &pushConstantRange));
+    satComputePipeline = app.device.createComputePipeline(nullptr, vk::ComputePipelineCreateInfo({}, computeShaderStageCreateInfo, satComputePipelineLayout, nullptr, -1)).value;
 }
 
 void VarianceShadowMap::beginRenderPass(vk::CommandBuffer& commandBuffer) {
@@ -65,7 +71,8 @@ void VarianceShadowMap::prepareDescriptorSets(Application& app, Buffer& uniformB
         vk::DescriptorSetLayoutBinding(0, vk::DescriptorType::eUniformBufferDynamic, 1, vk::ShaderStageFlagBits::eAll),
         vk::DescriptorSetLayoutBinding(1, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eVertex), // Per mesh data
         vk::DescriptorSetLayoutBinding(2, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eVertex), // Per instance data
-        vk::DescriptorSetLayoutBinding(3, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eFragment) // Light sources
+        vk::DescriptorSetLayoutBinding(3, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eFragment), // Light sources
+        vk::DescriptorSetLayoutBinding(4, vk::DescriptorType::eStorageImage, 1, vk::ShaderStageFlagBits::eCompute) // Shadow map moments sat generation
     };
     descriptorSetLayout = app.device.createDescriptorSetLayout(vk::DescriptorSetLayoutCreateInfo({vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool}, bindings.size(), bindings.data(), nullptr));
     descriptorSet = app.device.allocateDescriptorSets(vk::DescriptorSetAllocateInfo(app.descriptorPool, 1, &descriptorSetLayout))[0];
@@ -74,12 +81,14 @@ void VarianceShadowMap::prepareDescriptorSets(Application& app, Buffer& uniformB
     vk::DescriptorBufferInfo perMeshBufferInfo(scene.perMeshBuffer.buffer, 0, sizeof(PerMeshData) * scene.perMeshData.size());
     vk::DescriptorBufferInfo perInstanceBufferInfo(scene.perInstanceBuffer.buffer, 0, sizeof(PerInstanceData) * scene.perInstanceData.size());
     vk::DescriptorBufferInfo lightSourcesBufferInfo(scene.lightSourcesBuffer.buffer, 0, sizeof(LightSource) * scene.lightSources.size());
+    vk::DescriptorImageInfo shadowMapDescriptorImageInfo(VK_NULL_HANDLE, momentImageView, vk::ImageLayout::eGeneral);
 
     std::array descriptorWrites = {
         vk::WriteDescriptorSet(descriptorSet, 0, 0, 1, vk::DescriptorType::eUniformBufferDynamic, nullptr, &bufferInfo),
         vk::WriteDescriptorSet(descriptorSet, 1, 0, 1, vk::DescriptorType::eStorageBuffer, nullptr, &perMeshBufferInfo),
         vk::WriteDescriptorSet(descriptorSet, 2, 0, 1, vk::DescriptorType::eStorageBuffer, nullptr, &perInstanceBufferInfo),
-        vk::WriteDescriptorSet(descriptorSet, 3, 0, 1, vk::DescriptorType::eStorageBuffer, nullptr,  &lightSourcesBufferInfo)
+        vk::WriteDescriptorSet(descriptorSet, 3, 0, 1, vk::DescriptorType::eStorageBuffer, nullptr,  &lightSourcesBufferInfo),
+        vk::WriteDescriptorSet(descriptorSet, 4, 0, 1, vk::DescriptorType::eStorageImage, &shadowMapDescriptorImageInfo)
     };
     app.device.updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
 }

@@ -20,19 +20,21 @@ file(MAKE_DIRECTORY ${SHADER_OUTPUT_DIR})
 file(MAKE_DIRECTORY ${BUILD_SHADER_OUTPUT_DIR})
 
 foreach(SHADER ${SHADER_FILES})
-    get_filename_component(SHADER_NAME ${SHADER} NAME)
-    set(SPIRV_FILE_TARGET "${SHADER_OUTPUT_DIR}/${SHADER_NAME}.spv")
-    set(SPIRV_FILE_BUILD "${BUILD_SHADER_OUTPUT_DIR}/${SHADER_NAME}.spv")
+    if(SHADER MATCHES "\\.(vert|frag|geom|comp)$")
+        get_filename_component(SHADER_NAME ${SHADER} NAME)
+        set(SPIRV_FILE_TARGET "${SHADER_OUTPUT_DIR}/${SHADER_NAME}.spv")
+        set(SPIRV_FILE_BUILD "${BUILD_SHADER_OUTPUT_DIR}/${SHADER_NAME}.spv")
 
-    add_custom_command(
-            OUTPUT ${SPIRV_FILE_TARGET} ${SPIRV_FILE_BUILD}
-            COMMAND ${Vulkan_GLSLC_EXECUTABLE} -o ${SPIRV_FILE_TARGET} ${SHADER}
-            COMMAND ${CMAKE_COMMAND} -E copy ${SPIRV_FILE_TARGET} ${SPIRV_FILE_BUILD}
-            DEPENDS ${SHADER}
-            COMMENT "Compiling shader ${SHADER_NAME}"
-            VERBATIM
-    )
-    list(APPEND SPIRV_BINARY_FILES ${SPIRV_FILE_TARGET} ${SPIRV_FILE_BUILD})
+        add_custom_command(
+                OUTPUT ${SPIRV_FILE_TARGET} ${SPIRV_FILE_BUILD}
+                COMMAND ${Vulkan_GLSLC_EXECUTABLE} -o ${SPIRV_FILE_TARGET} ${SHADER}
+                COMMAND ${CMAKE_COMMAND} -E copy ${SPIRV_FILE_TARGET} ${SPIRV_FILE_BUILD}
+                DEPENDS ${SHADER}
+                COMMENT "Compiling shader ${SHADER_NAME}"
+                VERBATIM
+        )
+        list(APPEND SPIRV_BINARY_FILES ${SPIRV_FILE_TARGET} ${SPIRV_FILE_BUILD})
+    endif()
 endforeach()
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/Resources")

@@ -8,6 +8,12 @@
 #include <Image.h>
 #include <Scene.h>
 
+struct SATPushConstants {
+    bool horizontal;
+    bool padding1;
+    bool padding2;
+    bool padding3;
+};
 
 class VarianceShadowMap {
 
@@ -24,6 +30,10 @@ public:
     vk::DescriptorSetLayout descriptorSetLayout;
     vk::DescriptorSet descriptorSet;
     vk::Framebuffer framebuffer;
+
+    vk::Pipeline satComputePipeline;
+    vk::PipelineLayout satComputePipelineLayout;
+
 
     VarianceShadowMap() {}
     VarianceShadowMap(Application& app, uint32_t width, Buffer& uniformBuffer, size_t alignedUBOSize, Scene& scene);

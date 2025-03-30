@@ -18,6 +18,8 @@
 #include "ShadowMap.h"
 #include "vma/vk_mem_alloc.h"
 
+#define SHADOW_MAP_SIZE 2048
+
 class Triangle : public MainLoop{
 
     struct UniformBufferObject {
@@ -53,7 +55,7 @@ public:
         scene.lightSources.push_back(LightSource(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(1389.6, 4042.11, -2454.57), glm::vec3(-0.82018, -0.410442, 0.39855), LightSourceType::DIRECTIONAL_LIGHT));
         // scene.lightSources.push_back(LightSource(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(-2270.03f, 2249.98f, 2652.1f), glm::vec3(-0.380248f, -0.83261f, -0.402705f), LightSourceType::DIRECTIONAL_LIGHT));
         scene.generateBuffers(*this);
-        shadowMap = VarianceShadowMap(*this, 5000, uniformBuffer, alignedUBOSize, scene);
+        shadowMap = VarianceShadowMap(*this, SHADOW_MAP_SIZE, uniformBuffer, alignedUBOSize, scene);
 
         prepareDescriptorSets();
         vk::PushConstantRange pushConstantRange = vk::PushConstantRange(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0, sizeof(PushConstants));
@@ -93,8 +95,26 @@ public:
         commandBuffer.drawIndexedIndirect(scene.indirectCommandsBuffer.buffer, 0, scene.meshCount, sizeof(vk::DrawIndexedIndirectCommand));
         commandBuffers[currentFrame].endRenderPass();
 
-        vk::ImageMemoryBarrier barrier = vk::ImageMemoryBarrier( vk::AccessFlagBits::eColorAttachmentWrite, vk::AccessFlagBits::eShaderRead,vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral,VK_QUEUE_FAMILY_IGNORED,VK_QUEUE_FAMILY_IGNORED, shadowMap.momentImages, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
-        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eFragmentShader, {}, {}, {}, barrier);
+        vk::ImageMemoryBarrier preSATBarrier = vk::ImageMemoryBarrier(vk::AccessFlagBits::eColorAttachmentWrite, vk::AccessFlagBits::eShaderRead, vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, shadowMap.momentImages, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
+        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eComputeShader, {}, {}, {}, preSATBarrier);
+
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, shadowMap.satComputePipeline);
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, shadowMap.satComputePipelineLayout, 0, 1, &shadowMap.descriptorSet, 1, &dynamicOffset1);
+        SATPushConstants satPushConstants{.horizontal = true};
+        commandBuffer.pushConstants<SATPushConstants>(shadowMap.satComputePipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, satPushConstants);
+        commandBuffer.dispatch(shadowMap.width / 32 + shadowMap.width % 32, 1, 1);
+
+        vk::ImageMemoryBarrier midSATBarrier = vk::ImageMemoryBarrier(vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead, vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, shadowMap.momentImages, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
+        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, {}, {}, {}, midSATBarrier);
+
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, shadowMap.satComputePipeline);
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, shadowMap.satComputePipelineLayout, 0, 1, &shadowMap.descriptorSet, 1, &dynamicOffset1);
+        satPushConstants.horizontal = false;
+        commandBuffer.pushConstants<SATPushConstants>(shadowMap.satComputePipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, satPushConstants);
+        commandBuffer.dispatch(shadowMap.width / 32 + shadowMap.width % 32, 1, 1);
+
+        vk::ImageMemoryBarrier postSATBarrier = vk::ImageMemoryBarrier(vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead, vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, shadowMap.momentImages, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
+        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eFragmentShader, {}, {}, {}, postSATBarrier);
 
         renderPass.beginRenderPass(swapchainFramebuffers[imageIndex], vk::Extent2D(width, height), commandBuffers[currentFrame]);
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline.graphicsPipeline);

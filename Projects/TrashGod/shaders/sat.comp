@@ -1,0 +1,42 @@
+#version 460
+
+#extension GL_GOOGLE_include_directive : require
+#extension GL_EXT_debug_printf : enable
+
+#define NUM_THREADS 32
+
+layout (local_size_x = NUM_THREADS, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 4, rg32f) uniform image2D moments;
+
+layout( push_constant ) uniform constants
+{
+    bool horizontal;
+} PushConstants;
+
+void main() {
+
+    float xSum = 0.0;
+    float x2Sum = 0.0;
+
+    if (gl_GlobalInvocationID.x > imageSize(moments).x) {
+        return;
+    }
+
+    if (PushConstants.horizontal) {
+        for (uint x = 0; x < imageSize(moments).x; x++) {
+            vec4 moment = imageLoad(moments, ivec2(x, gl_GlobalInvocationID.x));
+            xSum += moment.x;
+            x2Sum += moment.y;
+            imageStore(moments, ivec2(x, gl_GlobalInvocationID.x), vec4(xSum, x2Sum, 0.0, 0.0));
+        }
+    } else {
+        for (uint y = 0; y < imageSize(moments).y; y++) {
+            vec4 moment = imageLoad(moments, ivec2(gl_GlobalInvocationID.x, y));
+            xSum += moment.x;
+            x2Sum += moment.y;
+            imageStore(moments, ivec2(gl_GlobalInvocationID.x, y), vec4(xSum, x2Sum, 0.0, 0.0));
+        }
+    }
+
+}
