@@ -97,24 +97,36 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
     return ggx1 * ggx2;
 }
 
-vec2 getDoubleMoments(uint x, uint y) {
+dvec2 getDoubleMoments(uint x, uint y) {
     uint index = y * SHADOW_MAP_SIZE + x;
-    dvec2 moment = dvec2(doubleMoments.moments[index], doubleMoments.moments[index + SHADOW_MAP_SIZE * SHADOW_MAP_SIZE]);
-    return vec2(moment);
+    return dvec2(doubleMoments.moments[index], doubleMoments.moments[index + SHADOW_MAP_SIZE * SHADOW_MAP_SIZE]);
 }
 
 vec2 getMoments(uint x, uint y) {
     uint span = 4;
     uint width = span * 2 + 1;
 
-    vec2 rightDown = getDoubleMoments(x + span, y + span);
-    vec2 leftUp = getDoubleMoments(x - span - 1, y - span - 1);
-    vec2 rightUp = getDoubleMoments(x + span, y - span - 1);
-    vec2 leftDown = getDoubleMoments(x - span - 1, y + span);
+    dvec2 rightDown = getDoubleMoments(x + span, y + span);
+    dvec2 leftUp = getDoubleMoments(x - span - 1, y - span - 1);
+    dvec2 rightUp = getDoubleMoments(x + span, y - span - 1);
+    dvec2 leftDown = getDoubleMoments(x - span - 1, y + span);
 
-    vec2 moments = (rightDown + leftUp - rightUp - leftDown) / float(width * width);
-    debugPrintfEXT("moments: %f %f", moments.x, moments.y);
-    return moments;
+    dvec2 moments = (rightDown + leftUp - rightUp - leftDown) / double(width * width);
+    return vec2(moments);
+}
+
+vec2 getMomentsLooped(uint x, uint y) {
+    uint span = 4;
+    uint width = span * 2 + 1;
+    vec2 sum = vec2(0.0);
+
+    for (uint i = clamp(x - span, 0, SHADOW_MAP_SIZE - 1); i <= clamp(x + span, 0, SHADOW_MAP_SIZE - 1); i++) {
+        for (uint j = clamp(y - span, 0, SHADOW_MAP_SIZE - 1); j <= clamp(y + span, 0, SHADOW_MAP_SIZE - 1); j++) {
+            vec2 moment = vec2(getDoubleMoments(i, j));
+            sum += moment;
+        }
+    }
+    return sum / float(width * width);
 }
 
 float ShadowCalculationUsingVariance(uint lightSourceIndex) {
