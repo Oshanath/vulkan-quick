@@ -8,11 +8,13 @@
 #include <Image.h>
 #include <Scene.h>
 
+enum class SATOperation : uint32_t {
+    HORIZONTAL = 0,
+    VERTICAL = 1
+};
+
 struct SATPushConstants {
-    bool horizontal;
-    bool padding1;
-    bool padding2;
-    bool padding3;
+    SATOperation operation;
 };
 
 class VarianceShadowMap {
@@ -25,6 +27,7 @@ public:
     vk::ImageView momentImageView;
     VmaAllocation momentImageAllocation;
     Image depthImage;
+    Buffer doubleMomentsBuffer;
     vk::RenderPass renderPass;
     GraphicsPipeline graphicsPipeline;
     vk::DescriptorSetLayout descriptorSetLayout;
@@ -33,6 +36,8 @@ public:
 
     vk::Pipeline satComputePipeline;
     vk::PipelineLayout satComputePipelineLayout;
+    vk::Pipeline satPopulationComputePipeline;
+    vk::PipelineLayout satPopulationComputePipelineLayout;
 
 
     VarianceShadowMap() {}
@@ -41,7 +46,7 @@ public:
 
 private:
     void prepareDescriptorSets(Application& app, Buffer& uniformBuffer, size_t alignedUBOSize, Scene& scene);
-    void createMomentImages(Application& app, uint32_t width);
+    void createResources(Application& app, uint32_t width);
 };
 
 

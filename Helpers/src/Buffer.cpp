@@ -6,7 +6,7 @@
 
 #include <vma/vk_mem_alloc.h>
 
-Buffer::Buffer(Application& app, size_t size, vk::BufferUsageFlags bufferUsage, VmaMemoryUsage memoryUsage) {
+Buffer::Buffer(Application& app, size_t size, vk::BufferUsageFlags bufferUsage, VmaMemoryUsage memoryUsage): size(size) {
     VkBufferCreateInfo vertexBufferCreateInfo = vk::BufferCreateInfo({}, size, bufferUsage, vk::SharingMode::eExclusive);
     VmaAllocationCreateInfo allocationCreateInfo = {};
     allocationCreateInfo.usage = memoryUsage;

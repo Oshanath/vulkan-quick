@@ -1,0 +1,35 @@
+#version 460
+
+#extension GL_GOOGLE_include_directive : require
+#extension GL_EXT_debug_printf : enable
+#extension GL_ARB_gpu_shader_fp64 : require
+
+#define NUM_THREADS 32
+
+layout (local_size_x = NUM_THREADS, local_size_y = NUM_THREADS, local_size_z = 1) in;
+
+layout(binding = 4, rg32f) uniform image2D moments;
+
+layout(binding = 5) buffer DoubleMoments{
+    double moments[];
+} doubleMoments;
+
+dvec2 getMoments(uint x, uint y) {
+    uint index = y * imageSize(moments).x + x;
+    dvec2 moment = dvec2(doubleMoments.moments[index], doubleMoments.moments[index + imageSize(moments).x * imageSize(moments).y]);
+    return moment;
+}
+
+void setMoments(uint x, uint y, dvec2 moment) {
+    uint index = y * imageSize(moments).x + x;
+    doubleMoments.moments[index] = moment.x;
+    doubleMoments.moments[index + imageSize(moments).x * imageSize(moments).y] = moment.y;
+}
+
+void main() {
+
+    ivec2 coord = ivec2(gl_GlobalInvocationID.xy);
+    vec2 moment = imageLoad(moments, coord).rg;
+    dvec2 dMoments = dvec2(moment);
+    setMoments(coord.x, coord.y, dMoments);
+}

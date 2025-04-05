@@ -38,7 +38,9 @@ layout(binding = 4) readonly buffer LightSources {
     lightSource lightSources[];
 };
 
-layout(binding = 5, rg32f) readonly uniform image2D shadowMap;
+layout(binding = 5) buffer DoubleMoments{
+    double moments[];
+} doubleMoments;
 
 float calculateAttenuation(vec3 fragPos, vec3 lightPosition, uint lightSourceIndex) {
     if (lightSources[lightSourceIndex].type == DIRECTIONAL_LIGHT) {
@@ -95,27 +97,24 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
     return ggx1 * ggx2;
 }
 
-vec2 getMoments(ivec2 coords) {
-    int span = 4;
-    int width = span * 2 + 1;
+vec2 getDoubleMoments(uint x, uint y) {
+    uint index = y * SHADOW_MAP_SIZE + x;
+    dvec2 moment = dvec2(doubleMoments.moments[index], doubleMoments.moments[index + SHADOW_MAP_SIZE * SHADOW_MAP_SIZE]);
+    return vec2(moment);
+}
 
-//    vec2 moments = vec2(0.0);
-//    for (int x = 0; x < width; x++) {
-//        for (int y = 0; y < width; y++) {
-//            vec2 depth = imageLoad(shadowMap, coords - ivec2(span, span) + ivec2(x, y)).rg;
-//            moments += depth;
-//        }
-//    }
-//    return moments / (width * width);
+vec2 getMoments(uint x, uint y) {
+    uint span = 2;
+    uint width = span * 2 + 1;
 
-    ivec2 maxCoords = coords + ivec2(span, span);
-    ivec2 minCoords = coords - ivec2(span + 1, span + 1);
-    vec2 downRight = imageLoad(shadowMap, maxCoords).rg;
-    vec2 downLeft = imageLoad(shadowMap, ivec2(minCoords.x, maxCoords.y)).rg;
-    vec2 upRight = imageLoad(shadowMap, ivec2(maxCoords.x, minCoords.y)).rg;
-    vec2 upLeft = imageLoad(shadowMap, minCoords).rg;
-    vec2 value = (downRight + upLeft - downLeft - upRight) / (width * width);
-    return value;
+    vec2 rightDown = getDoubleMoments(x + span, y + span);
+    vec2 leftUp = getDoubleMoments(x - span - 1, y - span - 1);
+    vec2 rightUp = getDoubleMoments(x + span, y - span - 1);
+    vec2 leftDown = getDoubleMoments(x - span - 1, y + span);
+
+    vec2 moments = (rightDown + leftUp - rightUp - leftDown) / float(width * width);
+    debugPrintfEXT("moments: %f %f", moments.x, moments.y);
+    return moments;
 }
 
 float ShadowCalculationUsingVariance(uint lightSourceIndex) {
@@ -125,22 +124,13 @@ float ShadowCalculationUsingVariance(uint lightSourceIndex) {
     float currentDepth = length(vec3(fragPos) - lightSources[lightSourceIndex].position) / 10000.0;
 
     // Chebyshev's inequality
-    vec2 moments = getMoments(ivec2(projCoords.xy));
+    vec2 moments = getDoubleMoments(uint(projCoords.x), uint(projCoords.y));
     float p = float(currentDepth <= moments.x);
 
     float variance = max(moments.y - moments.x * moments.x, 0.0);
     float d = currentDepth - moments.x;
     float pMax = variance / (variance + d * d);
     return max(p, pMax);
-}
-
-float ShadowCalculation(uint lightSourceIndex) {
-    vec4 fragPosLightSpace = ubo.lightViewProj * fragPos;
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    projCoords.xy = projCoords.xy * 0.5 + 0.5;
-    float closestDepth = imageLoad(shadowMap, ivec2(projCoords.xy * SHADOW_MAP_SIZE)).r;
-    float currentDepth = length(vec3(fragPos) - lightSources[lightSourceIndex].position) / 10000.0;
-    return currentDepth > closestDepth  ? 1.0 : 0.0;
 }
 
 void main() {

@@ -2,6 +2,7 @@
 
 #extension GL_GOOGLE_include_directive : require
 #extension GL_EXT_debug_printf : enable
+#extension GL_ARB_gpu_shader_fp64 : require
 
 #define NUM_THREADS 32
 
@@ -9,33 +10,51 @@ layout (local_size_x = NUM_THREADS, local_size_y = 1, local_size_z = 1) in;
 
 layout(binding = 4, rg32f) uniform image2D moments;
 
+layout(binding = 5) buffer DoubleMoments{
+    double moments[];
+} doubleMoments;
+
+#define OPERATION_HORIZONTAL 0
+#define OPERATION_VERTICAL 1
 layout( push_constant ) uniform constants
 {
-    bool horizontal;
+    uint operation;
 } PushConstants;
+
+dvec2 getMoments(uint x, uint y) {
+    uint index = y * imageSize(moments).x + x;
+    dvec2 moment = dvec2(doubleMoments.moments[index], doubleMoments.moments[index + imageSize(moments).x * imageSize(moments).y]);
+    return moment;
+}
+
+void setMoments(uint x, uint y, dvec2 moment) {
+    uint index = y * imageSize(moments).x + x;
+    doubleMoments.moments[index] = moment.x;
+    doubleMoments.moments[index + imageSize(moments).x * imageSize(moments).y] = moment.y;
+}
 
 void main() {
 
-    float xSum = 0.0;
-    float x2Sum = 0.0;
+    dvec2 sums = dvec2(0.0, 0.0);
 
     if (gl_GlobalInvocationID.x > imageSize(moments).x) {
         return;
     }
 
-    if (PushConstants.horizontal) {
+    if (PushConstants.operation == OPERATION_HORIZONTAL) {
         for (uint x = 0; x < imageSize(moments).x; x++) {
-            vec4 moment = imageLoad(moments, ivec2(x, gl_GlobalInvocationID.x));
-            xSum += moment.x;
-            x2Sum += moment.y;
-            imageStore(moments, ivec2(x, gl_GlobalInvocationID.x), vec4(xSum, x2Sum, 0.0, 0.0));
+            ivec2 coord = ivec2(x, gl_GlobalInvocationID.x);
+            dvec2 moments = getMoments(coord.x, coord.y);
+            sums += moments;
+            setMoments(coord.x, coord.y, moments);
         }
-    } else {
+    }
+    else {
         for (uint y = 0; y < imageSize(moments).y; y++) {
-            vec4 moment = imageLoad(moments, ivec2(gl_GlobalInvocationID.x, y));
-            xSum += moment.x;
-            x2Sum += moment.y;
-            imageStore(moments, ivec2(gl_GlobalInvocationID.x, y), vec4(xSum, x2Sum, 0.0, 0.0));
+            ivec2 coord = ivec2(gl_GlobalInvocationID.x, y);
+            dvec2 moments = getMoments(coord.x, coord.y);
+            sums += moments;
+            setMoments(coord.x, coord.y, moments);
         }
     }
 

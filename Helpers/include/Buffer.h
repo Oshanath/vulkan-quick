@@ -13,6 +13,7 @@ class Buffer {
 public:
     vk::Buffer buffer;
     VmaAllocation allocation;
+    size_t size;
 
     Buffer() {}
 

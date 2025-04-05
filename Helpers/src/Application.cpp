@@ -68,6 +68,7 @@ vkb::PhysicalDevice Application::selectPhysicalDevice() {
     features.samplerAnisotropy = VK_TRUE;
     features.multiDrawIndirect = VK_TRUE;
     features.fragmentStoresAndAtomics = VK_TRUE;
+    features.shaderFloat64 = VK_TRUE;
 
     vkb::PhysicalDeviceSelector physicalDeviceSelector({ vkbInstance });
     auto phys_ret = physicalDeviceSelector.set_surface(surface)

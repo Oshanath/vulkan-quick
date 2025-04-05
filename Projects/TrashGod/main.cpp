@@ -84,6 +84,7 @@ public:
         vk::ImageMemoryBarrier preBarrier = vk::ImageMemoryBarrier(vk::AccessFlagBits::eShaderRead, vk::AccessFlagBits::eColorAttachmentWrite, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, shadowMap.momentImages, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
         commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eFragmentShader, vk::PipelineStageFlagBits::eColorAttachmentOutput, {}, {}, {}, preBarrier);
 
+        // Shadow pass
         shadowMap.beginRenderPass(commandBuffer);
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, shadowMap.graphicsPipeline.graphicsPipeline);
         uint32_t dynamicOffset1 = currentFrame * static_cast<uint32_t>(alignedUBOSize);
@@ -95,27 +96,39 @@ public:
         commandBuffer.drawIndexedIndirect(scene.indirectCommandsBuffer.buffer, 0, scene.meshCount, sizeof(vk::DrawIndexedIndirectCommand));
         commandBuffers[currentFrame].endRenderPass();
 
-        vk::ImageMemoryBarrier preSATBarrier = vk::ImageMemoryBarrier(vk::AccessFlagBits::eColorAttachmentWrite, vk::AccessFlagBits::eShaderRead, vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, shadowMap.momentImages, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
-        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eComputeShader, {}, {}, {}, preSATBarrier);
+        vk::ImageMemoryBarrier preImageBarrier = vk::ImageMemoryBarrier(vk::AccessFlagBits::eColorAttachmentWrite, vk::AccessFlagBits::eShaderRead, vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, shadowMap.momentImages, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
+        vk::BufferMemoryBarrier preBufferBarrier = vk::BufferMemoryBarrier(vk::AccessFlagBits::eShaderWrite | vk::AccessFlagBits::eShaderRead, vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, shadowMap.doubleMomentsBuffer.buffer, 0, shadowMap.doubleMomentsBuffer.size);
+        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eFragmentShader, vk::PipelineStageFlagBits::eComputeShader, {}, {}, {preBufferBarrier}, {});
 
+        // SAT Population pass
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, shadowMap.satPopulationComputePipeline);
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, shadowMap.satPopulationComputePipelineLayout, 0, 1, &shadowMap.descriptorSet, 1, &dynamicOffset1);
+        commandBuffer.dispatch(shadowMap.width / 32 + shadowMap.width % 32, shadowMap.width / 32 + shadowMap.width % 32, 1);
+
+        vk::BufferMemoryBarrier preSATBufferBarrier = vk::BufferMemoryBarrier(vk::AccessFlagBits::eShaderWrite | vk::AccessFlagBits::eShaderRead, vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, shadowMap.doubleMomentsBuffer.buffer, 0, shadowMap.doubleMomentsBuffer.size);
+        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, {}, {}, {preSATBufferBarrier}, {});
+
+        // SAT generation pass horizontal
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, shadowMap.satComputePipeline);
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, shadowMap.satComputePipelineLayout, 0, 1, &shadowMap.descriptorSet, 1, &dynamicOffset1);
-        SATPushConstants satPushConstants{.horizontal = true};
+        SATPushConstants satPushConstants{.operation = SATOperation::HORIZONTAL};
         commandBuffer.pushConstants<SATPushConstants>(shadowMap.satComputePipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, satPushConstants);
         commandBuffer.dispatch(shadowMap.width / 32 + shadowMap.width % 32, 1, 1);
 
-        vk::ImageMemoryBarrier midSATBarrier = vk::ImageMemoryBarrier(vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead, vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, shadowMap.momentImages, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
-        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, {}, {}, {}, midSATBarrier);
+        vk::BufferMemoryBarrier midSATBufferBarrier = vk::BufferMemoryBarrier(vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, shadowMap.doubleMomentsBuffer.buffer, 0, shadowMap.doubleMomentsBuffer.size);
+        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eComputeShader, {}, {}, {midSATBufferBarrier}, {});
 
+        // SAT generation pass vertical
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, shadowMap.satComputePipeline);
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, shadowMap.satComputePipelineLayout, 0, 1, &shadowMap.descriptorSet, 1, &dynamicOffset1);
-        satPushConstants.horizontal = false;
+        satPushConstants.operation = SATOperation::VERTICAL;
         commandBuffer.pushConstants<SATPushConstants>(shadowMap.satComputePipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, satPushConstants);
         commandBuffer.dispatch(shadowMap.width / 32 + shadowMap.width % 32, 1, 1);
 
-        vk::ImageMemoryBarrier postSATBarrier = vk::ImageMemoryBarrier(vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead, vk::ImageLayout::eGeneral, vk::ImageLayout::eGeneral, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, shadowMap.momentImages, vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
-        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eFragmentShader, {}, {}, {}, postSATBarrier);
+        vk::BufferMemoryBarrier postSATBufferBarrier = vk::BufferMemoryBarrier(vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite, vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, shadowMap.doubleMomentsBuffer.buffer, 0, shadowMap.doubleMomentsBuffer.size);
+        commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader, vk::PipelineStageFlagBits::eFragmentShader, {}, {}, {postSATBufferBarrier}, {});
 
+        // Final graphics pass
         renderPass.beginRenderPass(swapchainFramebuffers[imageIndex], vk::Extent2D(width, height), commandBuffers[currentFrame]);
         commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline.graphicsPipeline);
         uint32_t dynamicOffset2 = currentFrame * static_cast<uint32_t>(alignedUBOSize);
@@ -144,7 +157,7 @@ public:
             vk::DescriptorSetLayoutBinding(2, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eVertex), // Per instance data
             vk::DescriptorSetLayoutBinding(3, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment), // Materials
             vk::DescriptorSetLayoutBinding(4, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eFragment), // Light sources
-            vk::DescriptorSetLayoutBinding(5, vk::DescriptorType::eStorageImage, 1, vk::ShaderStageFlagBits::eFragment) // Shadow map moments
+            vk::DescriptorSetLayoutBinding(5, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eFragment) // Shadow map moments
         };
         descriptorSetLayout = device.createDescriptorSetLayout(vk::DescriptorSetLayoutCreateInfo({vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool}, bindings.size(), bindings.data(), nullptr));
         descriptorSet = device.allocateDescriptorSets(vk::DescriptorSetAllocateInfo(descriptorPool, 1, &descriptorSetLayout))[0];
@@ -154,7 +167,7 @@ public:
         vk::DescriptorBufferInfo perInstanceBufferInfo(scene.perInstanceBuffer.buffer, 0, sizeof(PerInstanceData) * scene.perInstanceData.size());
         vk::DescriptorBufferInfo materialBufferInfo(scene.materialBuffer.buffer, 0, sizeof(Material) * scene.materials.size());
         vk::DescriptorBufferInfo lightSourcesBufferInfo(scene.lightSourcesBuffer.buffer, 0, sizeof(LightSource) * scene.lightSources.size());
-        vk::DescriptorImageInfo shadowMapDescriptorImageInfo(VK_NULL_HANDLE, shadowMap.momentImageView, vk::ImageLayout::eGeneral);
+        vk::DescriptorBufferInfo shadowMapDescriptorBufferInfo(shadowMap.doubleMomentsBuffer.buffer, 0, shadowMap.doubleMomentsBuffer.size);
 
         std::array descriptorWrites = {
             vk::WriteDescriptorSet(descriptorSet, 0, 0, 1, vk::DescriptorType::eUniformBufferDynamic, nullptr, &bufferInfo),
@@ -162,7 +175,7 @@ public:
             vk::WriteDescriptorSet(descriptorSet, 2, 0, 1, vk::DescriptorType::eStorageBuffer, nullptr, &perInstanceBufferInfo),
             vk::WriteDescriptorSet(descriptorSet, 3, 0, 1, vk::DescriptorType::eStorageBuffer, nullptr, &materialBufferInfo),
             vk::WriteDescriptorSet(descriptorSet, 4, 0, 1, vk::DescriptorType::eStorageBuffer, nullptr, &lightSourcesBufferInfo),
-            vk::WriteDescriptorSet(descriptorSet, 5, 0, 1, vk::DescriptorType::eStorageImage, &shadowMapDescriptorImageInfo)
+            vk::WriteDescriptorSet(descriptorSet, 5, 0, 1, vk::DescriptorType::eStorageBuffer, nullptr, &shadowMapDescriptorBufferInfo)
         };
         device.updateDescriptorSets(descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
     }
