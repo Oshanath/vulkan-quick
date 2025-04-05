@@ -46,7 +46,7 @@ void main() {
             ivec2 coord = ivec2(x, gl_GlobalInvocationID.x);
             dvec2 moments = getMoments(coord.x, coord.y);
             sums += moments;
-            setMoments(coord.x, coord.y, moments);
+            setMoments(coord.x, coord.y, sums);
         }
     }
     else {
@@ -54,7 +54,7 @@ void main() {
             ivec2 coord = ivec2(gl_GlobalInvocationID.x, y);
             dvec2 moments = getMoments(coord.x, coord.y);
             sums += moments;
-            setMoments(coord.x, coord.y, moments);
+            setMoments(coord.x, coord.y, sums);
         }
     }
 

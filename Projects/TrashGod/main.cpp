@@ -18,7 +18,7 @@
 #include "ShadowMap.h"
 #include "vma/vk_mem_alloc.h"
 
-#define SHADOW_MAP_SIZE 2048
+#define SHADOW_MAP_SIZE 4096
 
 class Triangle : public MainLoop{
 

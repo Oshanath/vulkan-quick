@@ -7,7 +7,7 @@
 #define SPOT_LIGHT 2
 
 #define PI 3.14159265359
-#define SHADOW_MAP_SIZE 2048
+#define SHADOW_MAP_SIZE 4096
 
 #include "common.h"
 
@@ -104,7 +104,7 @@ vec2 getDoubleMoments(uint x, uint y) {
 }
 
 vec2 getMoments(uint x, uint y) {
-    uint span = 2;
+    uint span = 4;
     uint width = span * 2 + 1;
 
     vec2 rightDown = getDoubleMoments(x + span, y + span);
@@ -124,7 +124,7 @@ float ShadowCalculationUsingVariance(uint lightSourceIndex) {
     float currentDepth = length(vec3(fragPos) - lightSources[lightSourceIndex].position) / 10000.0;
 
     // Chebyshev's inequality
-    vec2 moments = getDoubleMoments(uint(projCoords.x), uint(projCoords.y));
+    vec2 moments = getMoments(uint(projCoords.x), uint(projCoords.y));
     float p = float(currentDepth <= moments.x);
 
     float variance = max(moments.y - moments.x * moments.x, 0.0);
